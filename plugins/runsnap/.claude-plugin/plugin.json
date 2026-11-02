@@ -1,0 +1,7 @@
+{
+  "name": "runsnap",
+  "version": "0.1.0",
+  "description": "Before Claude's first edit in a turn, records what your Python functions return in the tests. When Claude finishes, shows it every call that now returns something different, even when all tests pass.",
+  "author": { "name": "Yu-Ting Pan" },
+  "license": "MIT"
+}

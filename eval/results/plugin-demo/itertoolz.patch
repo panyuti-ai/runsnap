@@ -1,0 +1,438 @@
+--- a/toolz/itertoolz.py	2026-10-07 04:15:41.718836800 +0000
++++ b/toolz/itertoolz.py	2026-11-02 16:45:41.284441525 +0000
+@@ -95,13 +95,11 @@
+     """
+     if not callable(key):
+         key = getter(key)
++    # Store bound ``append`` methods for speed; recover each list via __self__
+     d = collections.defaultdict(lambda: [].append)
+     for item in seq:
+         d[key(item)](item)
+-    rv = {}
+-    for k, v in d.items():
+-        rv[k] = v.__self__
+-    return rv
++    return {k: append.__self__ for k, append in d.items()}
+ 
+ 
+ def merge_sorted(*seqs, **kwargs):
+@@ -120,30 +118,32 @@
+     >>> list(merge_sorted([2, 3], [1, 3], key=lambda x: x // 3))
+     [2, 1, 3, 3]
+     """
+-    if len(seqs) == 0:
++    if not seqs:
+         return iter([])
+-    elif len(seqs) == 1:
++    if len(seqs) == 1:
+         return iter(seqs[0])
+ 
+-    key = kwargs.get('key', None)
++    key = kwargs.get('key')
+     if key is None:
+         return _merge_sorted_binary(seqs)
+-    else:
+-        return _merge_sorted_binary_key(seqs, key)
++    return _merge_sorted_binary_key(seqs, key)
+ 
+ 
+-def _merge_sorted_binary(seqs):
++def _split_merge(seqs, merge, *args):
++    """ Split ``seqs`` in half and recursively merge each half with ``merge``
++
++    Returns two iterators.  A half holding a single sequence is used directly.
++    """
+     mid = len(seqs) // 2
+-    L1 = seqs[:mid]
+-    if len(L1) == 1:
+-        seq1 = iter(L1[0])
+-    else:
+-        seq1 = _merge_sorted_binary(L1)
+-    L2 = seqs[mid:]
+-    if len(L2) == 1:
+-        seq2 = iter(L2[0])
+-    else:
+-        seq2 = _merge_sorted_binary(L2)
++    return tuple(iter(half[0]) if len(half) == 1 else merge(half, *args)
++                 for half in (seqs[:mid], seqs[mid:]))
++
++
++# The two merge functions below are intentionally separate: the keyless
++# version avoids calling a key function in this hot loop.
++
++def _merge_sorted_binary(seqs):
++    seq1, seq2 = _split_merge(seqs, _merge_sorted_binary)
+ 
+     try:
+         val2 = next(seq2)
+@@ -173,17 +173,7 @@
+ 
+ 
+ def _merge_sorted_binary_key(seqs, key):
+-    mid = len(seqs) // 2
+-    L1 = seqs[:mid]
+-    if len(L1) == 1:
+-        seq1 = iter(L1[0])
+-    else:
+-        seq1 = _merge_sorted_binary_key(L1, key)
+-    L2 = seqs[mid:]
+-    if len(L2) == 1:
+-        seq2 = iter(L2[0])
+-    else:
+-        seq2 = _merge_sorted_binary_key(L2, key)
++    seq1, seq2 = _split_merge(seqs, _merge_sorted_binary_key, key)
+ 
+     try:
+         val2 = next(seq2)
+@@ -259,7 +249,7 @@
+             if item not in seen:
+                 seen_add(item)
+                 yield item
+-    else:  # calculate key
++    else:
+         for item in seq:
+             val = key(item)
+             if val not in seen:
+@@ -297,16 +287,16 @@
+     >>> isdistinct("World")
+     True
+     """
+-    if iter(seq) is seq:
+-        seen = set()
+-        seen_add = seen.add
+-        for item in seq:
+-            if item in seen:
+-                return False
+-            seen_add(item)
+-        return True
+-    else:
++    if iter(seq) is not seq:
+         return len(seq) == len(set(seq))
++    # Lazy iterator: stop as soon as a duplicate is found
++    seen = set()
++    seen_add = seen.add
++    for item in seq:
++        if item in seen:
++            return False
++        seen_add(item)
++    return True
+ 
+ 
+ def take(n, seq):
+@@ -386,10 +376,9 @@
+     >>> nth(1, 'ABC')
+     'B'
+     """
+-    if isinstance(seq, (tuple, list, Sequence)):
++    if isinstance(seq, Sequence):
+         return seq[n]
+-    else:
+-        return next(itertools.islice(seq, n, None))
++    return next(itertools.islice(seq, n, None))
+ 
+ 
+ def last(seq):
+@@ -449,23 +438,15 @@
+     except TypeError:  # `ind` may be a list
+         if isinstance(ind, list):
+             if default == no_default:
+-                if len(ind) > 1:
+-                    return operator.itemgetter(*ind)(seq)
+-                elif ind:
+-                    return seq[ind[0]],
+-                else:
+-                    return ()
+-            else:
+-                return tuple(_get(i, seq, default) for i in ind)
+-        elif default != no_default:
+-            return default
+-        else:
++                return getter(ind)(seq)
++            return tuple(_get(i, seq, default) for i in ind)
++        if default == no_default:
+             raise
++        return default
+     except (KeyError, IndexError):  # we know `ind` is not a list
+         if default == no_default:
+             raise
+-        else:
+-            return default
++        return default
+ 
+ 
+ def concat(seqs):
+@@ -525,6 +506,7 @@
+     >>> list(interpose("a", []))
+     []
+     """
++    # Yield el, x1, el, x2, ... and drop the leading el
+     inposed = concat(zip(itertools.repeat(el), seq))
+     try:
+         next(inposed)
+@@ -543,10 +525,7 @@
+         countby
+         groupby
+     """
+-    d = collections.defaultdict(int)
+-    for item in seq:
+-        d[item] += 1
+-    return dict(d)
++    return dict(collections.Counter(seq))
+ 
+ 
+ def reduceby(key, binop, seq, init=no_default):
+@@ -610,22 +589,19 @@
+     {True:  set([2, 4]),
+      False: set([1, 3])}
+     """
+-    is_no_default = init == no_default
+-    if not is_no_default and not callable(init):
+-        _init = init
+-        init = lambda: _init
+     if not callable(key):
+         key = getter(key)
+     d = {}
+-    for item in seq:
+-        k = key(item)
+-        if k not in d:
+-            if is_no_default:
+-                d[k] = item
+-                continue
+-            else:
+-                d[k] = init()
+-        d[k] = binop(d[k], item)
++    if init == no_default:
++        # The first item of each group seeds the reduction
++        for item in seq:
++            k = key(item)
++            d[k] = binop(d[k], item) if k in d else item
++    else:
++        make_init = init if callable(init) else lambda: init
++        for item in seq:
++            k = key(item)
++            d[k] = binop(d[k] if k in d else make_init(), item)
+     return d
+ 
+ 
+@@ -672,8 +648,11 @@
+     >>> list(map(mean, sliding_window(2, [1, 2, 3, 4])))
+     [1.5, 2.5, 3.5]
+     """
+-    return zip(*(collections.deque(itertools.islice(it, i), 0) or it
+-               for i, it in enumerate(itertools.tee(seq, n))))
++    iters = itertools.tee(seq, n)
++    # Advance the i-th copy by i items so that zip yields each window
++    for i, it in enumerate(iters):
++        collections.deque(itertools.islice(it, i), maxlen=0)
++    return zip(*iters)
+ 
+ 
+ no_pad = '__no__pad__'
+@@ -700,8 +679,7 @@
+     args = [iter(seq)] * n
+     if pad is no_pad:
+         return zip(*args)
+-    else:
+-        return zip_longest(*args, fillvalue=pad)
++    return zip_longest(*args, fillvalue=pad)
+ 
+ 
+ def partition_all(n, seq):
+@@ -727,31 +705,32 @@
+     for item in it:
+         yield prev
+         prev = item
+-    if prev[-1] is no_pad:
+-        try:
+-            # If seq defines __len__, then
+-            # we can quickly calculate where no_pad starts
+-            end = len(seq) % n
+-            if prev[end - 1] is no_pad or prev[end] is not no_pad:
+-                raise LookupError(
+-                    'The sequence passed to `parition_all` has invalid length'
+-                )
+-            yield prev[:end]
+-        except TypeError:
+-            # Get first index of no_pad without using .index()
+-            # https://github.com/pytoolz/toolz/issues/387
+-            # Binary search from CPython's bisect module,
+-            # modified for identity testing.
+-            lo, hi = 0, n
+-            while lo < hi:
+-                mid = (lo + hi) // 2
+-                if prev[mid] is no_pad:
+-                    hi = mid
+-                else:
+-                    lo = mid + 1
+-            yield prev[:lo]
+-    else:
++    if prev[-1] is not no_pad:
+         yield prev
++        return
++    # The last tuple is padded; trim it
++    try:
++        # If seq defines __len__, then
++        # we can quickly calculate where no_pad starts
++        end = len(seq) % n
++        if prev[end - 1] is no_pad or prev[end] is not no_pad:
++            raise LookupError(
++                'The sequence passed to `parition_all` has invalid length'
++            )
++        yield prev[:end]
++    except TypeError:
++        # Get first index of no_pad without using .index()
++        # https://github.com/pytoolz/toolz/issues/387
++        # Binary search from CPython's bisect module,
++        # modified for identity testing.
++        lo, hi = 0, n
++        while lo < hi:
++            mid = (lo + hi) // 2
++            if prev[mid] is no_pad:
++                hi = mid
++            else:
++                lo = mid + 1
++        yield prev[:lo]
+ 
+ 
+ def count(seq):
+@@ -766,7 +745,7 @@
+     """
+     if hasattr(seq, '__len__'):
+         return len(seq)
+-    return sum(1 for i in seq)
++    return sum(1 for _ in seq)
+ 
+ 
+ def pluck(ind, seqs, default=no_default):
+@@ -793,25 +772,26 @@
+         map
+     """
+     if default == no_default:
+-        get = getter(ind)
+-        return map(get, seqs)
+-    elif isinstance(ind, list):
++        return map(getter(ind), seqs)
++    if isinstance(ind, list):
+         return (tuple(_get(item, seq, default) for item in ind)
+                 for seq in seqs)
+     return (_get(ind, seq, default) for seq in seqs)
+ 
+ 
+ def getter(index):
+-    if isinstance(index, list):
+-        if len(index) == 1:
+-            index = index[0]
+-            return lambda x: (x[index],)
+-        elif index:
+-            return operator.itemgetter(*index)
+-        else:
+-            return lambda x: ()
+-    else:
++    """ Return a function that indexes into its argument
++
++    A list of indices always produces a tuple, even for zero or one index.
++    """
++    if not isinstance(index, list):
+         return operator.itemgetter(index)
++    if len(index) == 1:
++        index = index[0]
++        return lambda x: (x[index],)
++    if index:
++        return operator.itemgetter(*index)
++    return lambda x: ()
+ 
+ 
+ def join(leftkey, leftseq, rightkey, rightseq,
+@@ -881,45 +861,23 @@
+ 
+     d = groupby(leftkey, leftseq)
+ 
+-    if left_default == no_default and right_default == no_default:
+-        # Inner Join
+-        for item in rightseq:
+-            key = rightkey(item)
+-            if key in d:
+-                for left_match in d[key]:
+-                    yield (left_match, item)
+-    elif left_default != no_default and right_default == no_default:
+-        # Right Join
+-        for item in rightseq:
+-            key = rightkey(item)
+-            if key in d:
+-                for left_match in d[key]:
+-                    yield (left_match, item)
+-            else:
+-                yield (left_default, item)
+-    elif right_default != no_default:
+-        seen_keys = set()
+-        seen = seen_keys.add
+-
+-        if left_default == no_default:
+-            # Left Join
+-            for item in rightseq:
+-                key = rightkey(item)
+-                seen(key)
+-                if key in d:
+-                    for left_match in d[key]:
+-                        yield (left_match, item)
+-        else:
+-            # Full Join
+-            for item in rightseq:
+-                key = rightkey(item)
+-                seen(key)
+-                if key in d:
+-                    for left_match in d[key]:
+-                        yield (left_match, item)
+-                else:
+-                    yield (left_default, item)
++    # Unmatched right items are kept for right/full joins; unmatched left
++    # items are kept for left/full joins.
++    keep_unmatched_right = left_default != no_default
++    keep_unmatched_left = right_default != no_default
++    seen_keys = set()
++
++    for item in rightseq:
++        key = rightkey(item)
++        if keep_unmatched_left:
++            seen_keys.add(key)
++        if key in d:
++            for left_match in d[key]:
++                yield (left_match, item)
++        elif keep_unmatched_right:
++            yield (left_default, item)
+ 
++    if keep_unmatched_left:
+         for key, matches in d.items():
+             if key not in seen_keys:
+                 for match in matches:
+@@ -954,16 +912,11 @@
+         iters = zip(*seqs)
+     else:
+         iters = zip_longest(*seqs, fillvalue=default)
+-    key = kwargs.get('key', None)
+-    if key is None:
+-        for items in iters:
+-            if items.count(items[0]) != N:
+-                yield items
+-    else:
+-        for items in iters:
+-            vals = tuple(map(key, items))
+-            if vals.count(vals[0]) != N:
+-                yield items
++    key = kwargs.get('key')
++    for items in iters:
++        vals = items if key is None else tuple(map(key, items))
++        if vals.count(vals[0]) != N:
++            yield items
+ 
+ 
+ def topk(k, seq, key=None):
+@@ -1020,7 +973,7 @@
+     """
+     iterator = iter(seq)
+     peeked = tuple(take(n, iterator))
+-    return peeked, itertools.chain(iter(peeked), iterator)
++    return peeked, itertools.chain(peeked, iterator)
+ 
+ 
+ def random_sample(prob, seq, random_state=None):

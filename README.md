@@ -55,6 +55,42 @@ The report above comes from the mutation experiment in [eval/](eval/): one `0` c
 Other commands: `runsnap calls SNAPSHOT FUNCTION [--test NAME]`, `runsnap slowest SNAPSHOT`, `runsnap list`.
 You can also set `runsnap_modules = mypkg` in your pytest ini instead of passing `--runsnap-module`.
 
+## Claude Code plugin
+
+The plugin does the recording and the diff for you, every turn, and tells Claude what changed:
+
+- before Claude's first edit of a `.py` file in a turn, it records your tests (twice, to learn what changes on every run);
+- when Claude is about to finish, it records them again and compares;
+- if any call now returns a different result for the same input, Claude is asked once to explain the change to you or fix it. Otherwise you see one line: `runsnap: same results for all compared calls`.
+
+Install runsnap in the project's environment (see above), then in Claude Code:
+
+```
+/plugin install runsnap --marketplace panyuti-ai/runsnap
+```
+
+and opt the project in with `.claude/runsnap.json`:
+
+```json
+{"modules": ["mypkg"], "tests": ["tests"], "python": ".venv/bin/python"}
+```
+
+What it looks like: we gave Claude Code the refactor prompt from [eval/](eval/) on toolz `itertoolz.py` with the plugin loaded. Claude made 19 edits to the file, ran the 187 tests, and also compared old and new versions on about 17,000 random inputs of its own; everything matched, and it reported that behavior was unchanged. Then the Stop hook said:
+
+```
+runsnap recorded the tests before and after your edits. 1 call now returns a different result
+for the same input (187 passed, 1 skipped in 1.34s):
+
+- toolz.itertoolz.interpose(el='a', seq=[])
+    in toolz/tests/test_itertoolz.py::test_interpose_empty
+    before: returns <list_iterator object at 0x…>
+    now:    returns <itertools.chain object at 0x…>
+```
+
+Claude answered that its shorter `interpose` returned a different kind of empty iterator, put the original code back, and re-ran the tests. Full transcript excerpt and patch: [eval/results/plugin-demo/](eval/results/plugin-demo/).
+
+`python` defaults to `.venv/bin/python` when it exists. Each turn that edits Python runs your tests three times, so this suits suites that take seconds, not minutes. Recordings and the HTML report go to `.runsnap/claude/`; add `.runsnap/` to `.gitignore`.
+
 ## For agents (MCP)
 
 ```
