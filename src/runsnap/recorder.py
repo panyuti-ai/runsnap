@@ -62,7 +62,11 @@ class Recorder:
     truncated: set[str] = field(default_factory=set)
 
     def __post_init__(self):
-        self._wanted: dict[object, str | None] = {}
+        # Keyed by id(code): code objects with identical contents (e.g. the same lambda in
+        # two modules) compare equal, so they must not be used as dict keys. The code
+        # objects are kept in _codes so their ids cannot be reused while we run.
+        self._wanted: dict[int, str | None] = {}
+        self._codes: list = []
         self._local = threading.local()
         self._test: str | None = None
         self._seq = 0
@@ -71,8 +75,9 @@ class Recorder:
 
     # which code objects to record ---------------------------------------
     def _name_for(self, code, frame) -> str | None:
-        if code in self._wanted:
-            return self._wanted[code]
+        key = id(code)
+        if key in self._wanted:
+            return self._wanted[key]
         module = frame.f_globals.get("__name__", "")
         name = None
         if (
@@ -81,7 +86,8 @@ class Recorder:
             and any(module == t or module.startswith(t + ".") for t in self.targets)
         ):
             name = f"{module}.{code.co_qualname}"
-        self._wanted[code] = name
+        self._wanted[key] = name
+        self._codes.append(code)
         return name
 
     def _stack(self) -> list:
@@ -119,7 +125,7 @@ class Recorder:
         return None
 
     def _on_yield(self, code, offset, value):
-        if self._wanted.get(code) is None:
+        if self._wanted.get(id(code)) is None:
             return sys.monitoring.DISABLE
         entry = self._gens.get(sys._getframe(1))
         if entry is not None and len(entry[2]) <= MAX_YIELDS:
@@ -147,7 +153,7 @@ class Recorder:
         self.calls.append(call)
 
     def _finish(self, code, frame, result=None, exc=None):
-        if self._wanted.get(code) is None:
+        if self._wanted.get(id(code)) is None:
             return sys.monitoring.DISABLE
         if code.co_flags & inspect.CO_GENERATOR:
             self._finish_generator(frame, result, exc)

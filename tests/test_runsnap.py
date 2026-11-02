@@ -181,3 +181,15 @@ def test_generator_change_and_unfinished(project):
     record(project, "after")
     changed = {(c["func"], c["before"], c["after"]) for c in diff("before", "after")["changed"]}
     assert ("shop.numbers", "returns yields [0, 1, 2]", "returns yields [0, 1, 3]") in changed
+
+
+def test_identical_functions_in_two_modules_keep_their_names(pytester, monkeypatch):
+    # Code objects with identical contents compare equal; runsnap must not mix them up.
+    body = "def helper(x):\n    return (lambda y: y + 1)(x)\n"
+    pytester.makepyfile(**{"pkg/__init__.py": "", "pkg/a.py": body, "pkg/b.py": body,
+                           "test_two": "from pkg import a, b\ndef test_x():\n    assert a.helper(1) == b.helper(1) == 2\n"})
+    monkeypatch.chdir(pytester.path)
+    monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "1")
+    pytester.runpytest_subprocess("--runsnap=s", "--runsnap-module=pkg", "-p", "no:cacheprovider").assert_outcomes(passed=1)
+    funcs = sorted(r["func"] for r in query.calls("s", "<lambda>"))
+    assert funcs == ["pkg.a.helper.<locals>.<lambda>", "pkg.b.helper.<locals>.<lambda>"]

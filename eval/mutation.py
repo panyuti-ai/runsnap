@@ -117,6 +117,19 @@ def main():
     files = [f for f in files if "test" not in f.name]
     snapdir = (Path(args.out).resolve().parent / f"snaps-{project.name}")
 
+    # Mutants are written with ast.unparse, which also reformats the file. Normalize every
+    # file the same way first, so the baseline differs from each mutant only by the mutation.
+    originals = {f: f.read_text(encoding="utf-8") for f in files}
+    try:
+        for f, text in originals.items():
+            f.write_text(ast.unparse(ast.parse(text)), encoding="utf-8")
+        run_experiment(args, project, pkg_path, files, snapdir)
+    finally:
+        for f, text in originals.items():
+            f.write_text(text, encoding="utf-8")
+
+
+def run_experiment(args, project, pkg_path, files, snapdir):
     base = run_tests(project, args.package, args.tests, "base", snapdir)
     run_tests(project, args.package, args.tests, "base2", snapdir)
     executed = line_coverage(project, pkg_path, args.tests, snapdir)
@@ -151,6 +164,7 @@ def main():
                          rerun=str(snapdir / "base2.sqlite"))
                 entry.update(changed=len(d["changed"]), gone=len(d["gone"]), new=len(d["new"]),
                              flagged=bool(d["changed"] or d["gone"] or d["new"]),
+                             flagged_changed_result=bool(d["changed"]),
                              example=(d["changed"] or d["gone"] or d["new"] or [None])[0])
             results.append(entry)
             status = "tests" if caught_by_tests else ("runsnap" if entry.get("flagged") else ("missed" if entry["reached"] else "not reached"))
@@ -168,6 +182,7 @@ def main():
         "survived_not_reached": len(survived) - len(reached),
         "survived_reached": len(reached),
         "flagged_by_runsnap": sum(r["flagged"] for r in reached),
+        "flagged_changed_result": sum(r["flagged_changed_result"] for r in reached),
     }
     Path(args.out).write_text(json.dumps({"summary": summary, "mutants": results}, ensure_ascii=False, indent=1))
     print(json.dumps(summary, indent=1))
