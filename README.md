@@ -75,6 +75,20 @@ and opt the project in with `.claude/runsnap.json`:
 {"modules": ["mypkg"], "tests": ["tests"], "python": ".venv/bin/python"}
 ```
 
+What it looks like: we gave Claude Code the refactor prompt from [eval/](eval/) on toolz `itertoolz.py` with the plugin loaded. Claude made 19 edits to the file, ran the 187 tests, and also compared old and new versions on about 17,000 random inputs of its own; everything matched, and it reported that behavior was unchanged. Then the Stop hook said:
+
+```
+runsnap recorded the tests before and after your edits. 1 call now returns a different result
+for the same input (187 passed, 1 skipped in 1.34s):
+
+- toolz.itertoolz.interpose(el='a', seq=[])
+    in toolz/tests/test_itertoolz.py::test_interpose_empty
+    before: returns <list_iterator object at 0x…>
+    now:    returns <itertools.chain object at 0x…>
+```
+
+Claude answered that its shorter `interpose` returned a different kind of empty iterator, put the original code back, and re-ran the tests. Full transcript excerpt and patch: [eval/results/plugin-demo/](eval/results/plugin-demo/).
+
 `python` defaults to `.venv/bin/python` when it exists. Each turn that edits Python runs your tests three times, so this suits suites that take seconds, not minutes. Recordings and the HTML report go to `.runsnap/claude/`; add `.runsnap/` to `.gitignore`.
 
 ## For agents (MCP)
