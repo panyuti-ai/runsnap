@@ -1,0 +1,605 @@
+{
+ "summary": {
+  "project": "toolz-1.2.0",
+  "package": "toolz",
+  "seed": 1,
+  "baseline": {
+   "passed": 187,
+   "failed": 0,
+   "errors": 0
+  },
+  "mutants": 60,
+  "caught_by_tests": 45,
+  "survived_tests": 15,
+  "survived_not_reached": 2,
+  "survived_reached": 13,
+  "flagged_by_runsnap": 2,
+  "flagged_changed_result": 0
+ },
+ "mutants": [
+  {
+   "file": "toolz/_signatures.py",
+   "line": 23,
+   "mutation": "10 -> 11",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.4,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 685,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.6
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 25,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.4,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 285,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 23,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 39,
+   "new": 39,
+   "flagged": true,
+   "flagged_changed_result": false,
+   "example": {
+    "kind": "gone",
+    "test": "toolz/tests/test_inspect_args.py::test_has_keywords",
+    "func": "toolz._signatures.check_keywords",
+    "args": "sig=(0, <function <lambda> at 0x…>, (), <Signature (x=0)>)",
+    "before": "returns True",
+    "after": null
+   }
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 371,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 653,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 112,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.3
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 853,
+   "mutation": "In -> NotIn",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.5
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 132,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.0
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 28,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.2,
+   "changed": 0,
+   "gone": 3,
+   "new": 3,
+   "flagged": true,
+   "flagged_changed_result": false,
+   "example": {
+    "kind": "gone",
+    "test": "toolz/tests/test_inspect_args.py::test_introspect_builtin_modules",
+    "func": "toolz._signatures.check_partial",
+    "args": "sig=(0, <function <lambda> at 0x…>, (), <Signature (object, times=0)>), args=(), kwargs={}",
+    "before": "returns True",
+    "after": null
+   }
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 167,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.4
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 84,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 0.8
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 335,
+   "mutation": "NotIn -> In",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.1
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 130,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 848,
+   "mutation": "In -> NotIn",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 39,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 572,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.3
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 392,
+   "mutation": "IsNot -> Is",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 867,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 692,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.6
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 30,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 453,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.8
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 122,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 26,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 71,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 0.5
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 877,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 121,
+   "mutation": "Lt -> LtE",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 66,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 561,
+   "mutation": "GtE -> Gt",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 1.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 49,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 712,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.1
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 839,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 167,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 143,
+   "mutation": "Lt -> LtE",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 1.9,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 894,
+   "mutation": "IsNot -> Is",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.1
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 853,
+   "mutation": "Or -> And",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 891,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.2
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 814,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 820,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 106,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 478,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 163,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/sandbox/parallel.py",
+   "line": 68,
+   "mutation": "Eq -> NotEq",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 30,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 1.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/dicttoolz.py",
+   "line": 50,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.8
+  },
+  {
+   "file": "toolz/sandbox/core.py",
+   "line": 79,
+   "mutation": "Eq -> NotEq",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 1.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 225,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/_signatures.py",
+   "line": 23,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 1.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 561,
+   "mutation": "14 -> 15",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 1.7,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 746,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.8
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 826,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/dicttoolz.py",
+   "line": 263,
+   "mutation": "In -> NotIn",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 270,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 904,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 689,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 581,
+   "mutation": "NotIn -> In",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 1.9
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 820,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/functoolz.py",
+   "line": 490,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.0
+  },
+  {
+   "file": "toolz/itertoolz.py",
+   "line": 691,
+   "mutation": "FloorDiv -> Mult",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.3
+  }
+ ]
+}

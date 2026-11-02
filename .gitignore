@@ -3,3 +3,4 @@ __pycache__/
 *.egg-info/
 .runsnap/
 .pytest_cache/
+eval/results/snaps-*/

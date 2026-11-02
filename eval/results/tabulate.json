@@ -1,0 +1,635 @@
+{
+ "summary": {
+  "project": "tabulate-0.10.0",
+  "package": "tabulate",
+  "seed": 1,
+  "baseline": {
+   "passed": 280,
+   "failed": 0,
+   "errors": 0
+  },
+  "mutants": 60,
+  "caught_by_tests": 40,
+  "survived_tests": 20,
+  "survived_not_reached": 5,
+  "survived_reached": 15,
+  "flagged_by_runsnap": 2,
+  "flagged_changed_result": 1
+ },
+ "mutants": [
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1600,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 7.7
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 102,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.5
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1694,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.1
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1438,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.8
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 774,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.7,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1761,
+   "mutation": "LtE -> Lt",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 3.3,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1770,
+   "mutation": "Add -> Sub",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 3.3,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1757,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 531,
+   "mutation": "5 -> 6",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.4,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 648,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.7
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1741,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.9
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 788,
+   "mutation": "In -> NotIn",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 14.5
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 277,
+   "mutation": "Or -> And",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.1
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 329,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 7.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1852,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 0.4
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1744,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 120.1
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1753,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.3
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1401,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 6.8
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 789,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.2,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1557,
+   "mutation": "2 -> 3",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.5
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 801,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.9,
+   "changed": 109,
+   "gone": 0,
+   "new": 0,
+   "flagged": true,
+   "flagged_changed_result": true,
+   "example": {
+    "kind": "changed",
+    "test": "test/test_input.py::test_iterable_of_iterables",
+    "func": "tabulate._normalize_tabular_data",
+    "args": "tabular_data=<map object at 0x…>, headers=(), showindex='default'",
+    "before": "returns ([[0, 1, 2, 3, 4], [5, 4, 3, 2, 1]], [], 0)",
+    "after": "returns ([[0, 1, 2, 3, 4], [5, 4, 3, 2, 1]], [], 1)"
+   }
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 572,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.9
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 650,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.4
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 124,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1757,
+   "mutation": "And -> Or",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.9,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 776,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1757,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 804,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 9.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 738,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1459,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 356,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.1,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1450,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 5.7
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 802,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.9,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 744,
+   "mutation": "Gt -> GtE",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 353,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 5.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1668,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.1
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 777,
+   "mutation": "IsNot -> Is",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 184,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 736,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 2.9,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1457,
+   "mutation": "Or -> And",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.3
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 50,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.5
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1769,
+   "mutation": "1 -> 2",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 2.8,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 184,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.1
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1429,
+   "mutation": "Mult -> FloorDiv",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 152,
+   "mutation": "Add -> Sub",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.9
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1761,
+   "mutation": "1 -> 2",
+   "reached": false,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 471,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 12.3
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1384,
+   "mutation": "IsNot -> Is",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.4
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 747,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.3
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1557,
+   "mutation": "Mult -> FloorDiv",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.6
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 799,
+   "mutation": "Eq -> NotEq",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.3,
+   "changed": 0,
+   "gone": 240,
+   "new": 0,
+   "flagged": true,
+   "flagged_changed_result": false,
+   "example": {
+    "kind": "gone",
+    "test": "test/test_input.py::test_dict_like",
+    "func": "tabulate._bool",
+    "args": "val='default'",
+    "before": "returns True",
+    "after": null
+   }
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1619,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.6
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 184,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.3
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1423,
+   "mutation": "Sub -> Add",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.0,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1695,
+   "mutation": "1 -> 2",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 2.9
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 530,
+   "mutation": "4 -> 5",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 4.0
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 738,
+   "mutation": "0 -> 1",
+   "reached": true,
+   "caught_by_tests": false,
+   "seconds": 3.1,
+   "changed": 0,
+   "gone": 0,
+   "new": 0,
+   "flagged": false,
+   "flagged_changed_result": false,
+   "example": null
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1372,
+   "mutation": "Is -> IsNot",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.4
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 148,
+   "mutation": "3 -> 4",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.2
+  },
+  {
+   "file": "tabulate/__init__.py",
+   "line": 1468,
+   "mutation": "Lt -> LtE",
+   "reached": true,
+   "caught_by_tests": true,
+   "seconds": 3.4
+  }
+ ]
+}
