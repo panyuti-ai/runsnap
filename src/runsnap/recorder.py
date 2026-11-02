@@ -16,7 +16,8 @@ from dataclasses import dataclass, field
 
 TOOL_ID = sys.monitoring.PROFILER_ID
 _EVENTS = sys.monitoring.events
-_SKIP_FLAGS = inspect.CO_GENERATOR | inspect.CO_COROUTINE | inspect.CO_ASYNC_GENERATOR
+_SKIP_FLAGS = inspect.CO_COROUTINE | inspect.CO_ASYNC_GENERATOR
+MAX_YIELDS = 50
 _ADDRESS = re.compile(r" at 0x[0-9a-fA-F]+")
 
 _repr = reprlib.Repr()
@@ -61,16 +62,22 @@ class Recorder:
     truncated: set[str] = field(default_factory=set)
 
     def __post_init__(self):
-        self._wanted: dict[object, str | None] = {}
+        # Keyed by id(code): code objects with identical contents (e.g. the same lambda in
+        # two modules) compare equal, so they must not be used as dict keys. The code
+        # objects are kept in _codes so their ids cannot be reused while we run.
+        self._wanted: dict[int, str | None] = {}
+        self._codes: list = []
         self._local = threading.local()
         self._test: str | None = None
         self._seq = 0
         self._active = False
+        self._gens: dict[object, tuple[Call, int, list[str]]] = {}
 
     # which code objects to record ---------------------------------------
     def _name_for(self, code, frame) -> str | None:
-        if code in self._wanted:
-            return self._wanted[code]
+        key = id(code)
+        if key in self._wanted:
+            return self._wanted[key]
         module = frame.f_globals.get("__name__", "")
         name = None
         if (
@@ -79,7 +86,8 @@ class Recorder:
             and any(module == t or module.startswith(t + ".") for t in self.targets)
         ):
             name = f"{module}.{code.co_qualname}"
-        self._wanted[code] = name
+        self._wanted[key] = name
+        self._codes.append(code)
         return name
 
     def _stack(self) -> list:
@@ -109,12 +117,47 @@ class Recorder:
             args["self"] = f"<{type(frame.f_locals['self']).__name__}>"
         call = Call(self._test, self._seq, name, len(stack), _format_args(args))
         self._seq += 1
+        if code.co_flags & inspect.CO_GENERATOR:
+            # A generator runs in pieces; keep it by frame and collect what it yields.
+            self._gens[frame] = (call, time.perf_counter_ns(), [])
+            return None
         stack.append((call, time.perf_counter_ns()))
         return None
 
-    def _finish(self, code, result=None, exc=None):
-        if self._wanted.get(code) is None:
+    def _on_yield(self, code, offset, value):
+        if self._wanted.get(id(code)) is None:
             return sys.monitoring.DISABLE
+        entry = self._gens.get(sys._getframe(1))
+        if entry is not None and len(entry[2]) <= MAX_YIELDS:
+            entry[2].append(safe_repr(value))
+        return None
+
+    def _finish_generator(self, frame, result=None, exc=None, finished=True):
+        entry = self._gens.pop(frame, None)
+        if entry is None:
+            return
+        call, started, yields = entry
+        call.duration_ns = time.perf_counter_ns() - started
+        shown = ", ".join(yields[:MAX_YIELDS]) + (", …" if len(yields) > MAX_YIELDS else "")
+        text = f"yields [{shown}]"
+        if exc is not None and not isinstance(exc, GeneratorExit):
+            call.exc = f"{type(exc).__name__}: {safe_repr(str(exc))} after {text}"
+        else:
+            if result is not None:
+                text += f" then returns {safe_repr(result)}"
+            if isinstance(exc, GeneratorExit):
+                text += " (closed before the end)"
+            elif not finished:
+                text += " (not run to the end)"
+            call.result = text
+        self.calls.append(call)
+
+    def _finish(self, code, frame, result=None, exc=None):
+        if self._wanted.get(id(code)) is None:
+            return sys.monitoring.DISABLE
+        if code.co_flags & inspect.CO_GENERATOR:
+            self._finish_generator(frame, result, exc)
+            return None
         stack = self._stack()
         if not stack:
             return None
@@ -131,10 +174,10 @@ class Recorder:
         return None
 
     def _on_return(self, code, offset, value):
-        return self._finish(code, result=value)
+        return self._finish(code, sys._getframe(1), result=value)
 
     def _on_unwind(self, code, offset, exc):
-        self._finish(code, exc=exc)  # PY_UNWIND cannot be disabled
+        self._finish(code, sys._getframe(1), exc=exc)  # PY_UNWIND cannot be disabled
 
     # control ---------------------------------------------------------------
     def install(self):
@@ -143,11 +186,12 @@ class Recorder:
         mon.register_callback(TOOL_ID, _EVENTS.PY_START, self._on_start)
         mon.register_callback(TOOL_ID, _EVENTS.PY_RETURN, self._on_return)
         mon.register_callback(TOOL_ID, _EVENTS.PY_UNWIND, self._on_unwind)
+        mon.register_callback(TOOL_ID, _EVENTS.PY_YIELD, self._on_yield)
 
     def uninstall(self):
         mon = sys.monitoring
         mon.set_events(TOOL_ID, 0)
-        for event in (_EVENTS.PY_START, _EVENTS.PY_RETURN, _EVENTS.PY_UNWIND):
+        for event in (_EVENTS.PY_START, _EVENTS.PY_RETURN, _EVENTS.PY_UNWIND, _EVENTS.PY_YIELD):
             mon.register_callback(TOOL_ID, event, None)
         mon.free_tool_id(TOOL_ID)
 
@@ -155,10 +199,15 @@ class Recorder:
         self._test = test
         self._seq = 0
         self._local = threading.local()
-        sys.monitoring.set_events(TOOL_ID, _EVENTS.PY_START | _EVENTS.PY_RETURN | _EVENTS.PY_UNWIND)
+        self._gens = {}
+        sys.monitoring.set_events(
+            TOOL_ID, _EVENTS.PY_START | _EVENTS.PY_RETURN | _EVENTS.PY_UNWIND | _EVENTS.PY_YIELD
+        )
 
     def end(self):
         sys.monitoring.set_events(TOOL_ID, 0)
+        for frame in list(self._gens):  # generators the test never ran to the end
+            self._finish_generator(frame, finished=False)
         self._test = None
 
 
