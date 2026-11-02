@@ -237,3 +237,38 @@ def test_html_report_marks_changed_and_skipped_functions(project, capsys):
     assert page.count("</script>") == 1
     assert any(g["after"] == "returns '</script><b>x'"
                for c in _report_data(page)["changes"].values() for g in c["groups"])
+
+
+def test_split_out_and_inlined_functions_are_not_behavior_changes(project):
+    record(project, "before")
+    record(project, "rerun")
+    # A behavior-preserving refactor: split a helper out of calc_tax, inline total() into checkout().
+    v2 = (SHOP_V1
+          .replace("def calc_tax(amount, rate=0.05):\n    return round(amount * rate, 2)",
+                   "def _tax(amount, rate):\n    return amount * rate\n\n"
+                   "def calc_tax(amount, rate=0.05):\n    return round(_tax(amount, rate), 2)")
+          .replace("def total(items):\n    return round(sum(items) + calc_tax(sum(items)), 2)\n", "")
+          .replace('{"total": total(items),', '{"total": round(sum(items) + calc_tax(sum(items)), 2),'))
+    project.makepyfile(shop=v2)
+    record(project, "after")
+
+    result = diff("before", "after", rerun="rerun")
+    assert result["changed"] == [] and result["gone"] == [] and result["new"] == []
+    assert result["new_functions"] == {"shop._tax": 1}
+    assert result["removed_functions"] == {"shop.total": 1}
+
+
+def test_tests_cut_off_by_the_call_limit_do_not_report_missing_calls(tmp_path, monkeypatch):
+    from runsnap.recorder import Call
+
+    monkeypatch.setenv("RUNSNAP_DIR", str(tmp_path))
+
+    def calls(test, xs):
+        return [Call(test, i, "m.f", 0, f"x={x}", repr(x), None, 1) for i, x in enumerate(xs)]
+
+    # "long" hit the limit in both recordings, at a different point each time.
+    store.write("before", calls("long", [1, 2, 3]) + calls("short", [1, 2]), ["m"], {"long"})
+    store.write("after", calls("long", [1, 2]) + calls("short", [1]), ["m"], {"long"})
+    result = diff("before", "after")
+    assert [(c["test"], c["args"]) for c in result["gone"]] == [("short", "x=2")]
+    assert result["truncated_tests"] == ["long"]

@@ -56,8 +56,16 @@ def build(before: str, after: str, rerun: str | None = None) -> str:
             "groups": _group(items),
         }
 
-    funcs = [[f, n, "changed" if f in changes else "skipped" if f in unstable else "same"]
-             for f, n in sorted(counts.items())]
+    def state(f):
+        if f in changes:
+            return "changed"
+        if f in result["new_functions"]:
+            return "added"
+        if f in result["removed_functions"]:
+            return "removed"
+        return "skipped" if f in unstable else "same"
+
+    funcs = [[f, n, state(f)] for f, n in sorted(counts.items())]
     data = {"before": before, "after": after, "rerun": rerun, "funcs": funcs, "changes": changes}
     # Keep "</script>" inside values from ending the script block.
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
@@ -81,18 +89,21 @@ _PAGE = r"""<!doctype html>
   --bg: #f7f6f2; --panel: #ffffff; --text: #1d1d1b; --muted: #85847e; --line: #e6e4de;
   --same: #d9e7dc; --same-hover: #c4dbc9; --chg: #e5484d; --chg-soft: #fdecec; --on-chg: #ffffff;
   --skip: #efe6cf; --skip-line: #c9a94a; --old: #6b6b66; --focus: #1d1d1b;
+  --added: #8fb4e3; --removed-line: #a9a7a0;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #151514; --panel: #1f1f1d; --text: #ecebe6; --muted: #8f8e87; --line: #33322f;
     --same: #2a3a2e; --same-hover: #34493a; --chg: #ff6369; --chg-soft: #3b1c1d; --on-chg: #1b0b0b;
-    --skip: #3a3322; --skip-line: #b8973a; --old: #a5a49d; --focus: #ecebe6; color-scheme: dark;
+    --skip: #3a3322; --skip-line: #b8973a; --old: #a5a49d; --focus: #ecebe6;
+    --added: #3d5f8a; --removed-line: #6a6964; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #151514; --panel: #1f1f1d; --text: #ecebe6; --muted: #8f8e87; --line: #33322f;
   --same: #2a3a2e; --same-hover: #34493a; --chg: #ff6369; --chg-soft: #3b1c1d; --on-chg: #1b0b0b;
-  --skip: #3a3322; --skip-line: #b8973a; --old: #a5a49d; --focus: #ecebe6; color-scheme: dark;
+  --skip: #3a3322; --skip-line: #b8973a; --old: #a5a49d; --focus: #ecebe6;
+    --added: #3d5f8a; --removed-line: #6a6964; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -119,6 +130,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 syst
 .tile:focus-visible, .jump button:focus-visible, .more:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .tile.changed { background: var(--chg); animation: pulse 1.6s ease-in-out infinite; }
 .tile.skipped { background: var(--skip); border: 2px dashed var(--skip-line); }
+.tile.added { background: var(--added); }
+.tile.removed { background: transparent; border: 2px dashed var(--removed-line); }
 .tile.sel { outline: 3px solid var(--focus); outline-offset: 2px; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--chg) 25%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .tile.changed { animation: none; } .tile, .g > summary::after { transition: none; } }
@@ -178,6 +191,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 syst
   <div class="legend">
     <span><i style="background:var(--same)"></i>same as before</span>
     <span><i style="background:var(--chg)"></i>behavior changed</span>
+    <span><i style="background:var(--added)"></i>new function</span>
+    <span><i style="border:2px dashed var(--removed-line)"></i>removed function</span>
     <span><i style="background:var(--skip);border:2px dashed var(--skip-line)"></i>skipped: changes on every run</span>
     <span>bigger box = called more often</span>
   </div>
@@ -277,9 +292,12 @@ function drawCard() {
   const head = `<div class="fn mono">${esc(shortName(selected))}</div><div class="where mono">${esc(moduleOf(selected))}</div>`;
   if (!c) {
     const row = DATA.funcs.find(r => r[0] === selected);
-    const msg = row[2] === "skipped"
-      ? "Skipped: its results already differ between two runs of the same code (time, random values), so changes here are not reported."
-      : "✓ Every recorded call gives the same result as before.";
+    const msg = {
+      skipped: "Skipped: its results already differ between two runs of the same code (time, random values), so changes here are not reported.",
+      added: "New function: it did not exist before, so there is nothing to compare. If it broke something, the functions that call it show the change.",
+      removed: "Removed function: it is no longer called. If removing it broke something, the functions that used it show the change.",
+      same: "✓ Every recorded call gives the same result as before.",
+    }[row[2]];
     card.innerHTML = head + `<p class="empty">${row[1]} calls recorded. ${msg}</p>`;
     return;
   }
