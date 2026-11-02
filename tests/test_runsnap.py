@@ -22,7 +22,13 @@ def checkout(items):
     return {"total": total(items), "at": time.time(), "lucky": random.random()}
 
 def numbers(n):
-    yield from range(n)
+    for i in range(n):
+        yield i
+
+def firsts(n):
+    for i in range(n):
+        yield i
+    return "done"
 
 class Cart:
     def __init__(self):
@@ -43,7 +49,9 @@ def test_empty():
         shop.checkout([])
 
 def test_numbers():
-    assert list(shop.numbers(3)) == [0, 1, 2]
+    assert len(list(shop.numbers(3))) == 3   # a loose test: checks the count, not the values
+    g = shop.firsts(5)
+    assert next(g) == 0
 
 def test_cart():
     c = shop.Cart()
@@ -77,9 +85,9 @@ def test_records_args_results_and_exceptions(project):
     assert empty[0]["exc"] == "ValueError: 'empty cart'"
 
 
-def test_skips_generators_and_marks_self(project):
+def test_records_generators_and_marks_self(project):
     record(project, "before")
-    assert query.calls("before", "numbers") == []
+    assert query.calls("before", "numbers")[0]["result"] == "yields [0, 1, 2]"
     add = query.calls("before", "Cart.add")
     assert add[0]["args"] == "self=<Cart>, price=10"
 
@@ -163,3 +171,13 @@ def test_mcp_tools(project):
     d = mcp_server.behavior_diff("before", "after", limit=1)
     assert d["changed_total"] >= 1 and len(d["changed"]) == 1
     assert "test_shop.py::test_checkout" in mcp_server.tests_reaching("before", "calc_tax")
+
+
+def test_generator_change_and_unfinished(project):
+    record(project, "before")
+    rows = query.calls("before", "firsts")
+    assert rows[0]["result"] == "yields [0] (closed before the end)"
+    project.makepyfile(shop=SHOP_V1.replace("    for i in range(n):\n        yield i\n\ndef firsts", "    for i in range(n):\n        yield i * 1 if i < 2 else i + 1\n\ndef firsts"))
+    record(project, "after")
+    changed = {(c["func"], c["before"], c["after"]) for c in diff("before", "after")["changed"]}
+    assert ("shop.numbers", "returns yields [0, 1, 2]", "returns yields [0, 1, 3]") in changed

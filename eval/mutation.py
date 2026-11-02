@@ -66,16 +66,21 @@ def apply(site):
     return lambda: setattr(node, "value", old)
 
 
+TIMEOUT = 120  # seconds; the unchanged suites take under 5
 SUMMARY = re.compile(r"(\d+) (passed|failed|errors?)")
 
 
 def run_tests(project, package, tests, label, snapdir):
     env = dict(os.environ, RUNSNAP_DIR=str(snapdir), PYTHONDONTWRITEBYTECODE="1")
-    proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", tests,
-         f"--runsnap={label}", f"--runsnap-module={package}"],
-        cwd=project, env=env, capture_output=True, text=True, timeout=600,
-    )
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", tests,
+             f"--runsnap={label}", f"--runsnap-module={package}"],
+            cwd=project, env=env, capture_output=True, text=True, timeout=TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        # A mutant that makes the suite hang (e.g. an endless loop) is caught by the tests.
+        return {"passed": 0, "failed": 0, "errors": 0, "timeout": True}
     counts = {"passed": 0, "failed": 0, "errors": 0}
     for n, kind in SUMMARY.findall(proc.stdout.splitlines()[-1] if proc.stdout else ""):
         counts["errors" if kind.startswith("error") else kind] = int(n)
