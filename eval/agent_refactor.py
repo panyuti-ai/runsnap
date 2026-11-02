@@ -96,8 +96,8 @@ def run_agent(agent, project, prompt, log_path):
     else:
         # Codex's workspace sandbox (bubblewrap) fails to start unless the folders it keeps
         # read-only already exist; empty ones are enough. They are removed after the run.
-        for name in CODEX_DIRS:
-            (project / name).mkdir(exist_ok=True)
+        for folder in CODEX_DIRS:
+            (project / folder).mkdir(exist_ok=True)
         codex = os.environ.get("CODEX_BIN", "codex")
         cmd = [codex, "exec", "--json", "--skip-git-repo-check", "--sandbox", "workspace-write", prompt]
     started = time.time()
@@ -154,9 +154,9 @@ def main():
                      str(snapdir / f"{name}.sqlite"), str(snapdir / "base2.sqlite"))
     finally:
         if args.agent == "codex":
-            for name in CODEX_DIRS:
-                if not (pristine / name).exists():
-                    shutil.rmtree(project / name, ignore_errors=True)
+            for folder in CODEX_DIRS:
+                if not (pristine / folder).exists():
+                    shutil.rmtree(project / folder, ignore_errors=True)
         restore(project, pristine)
 
     funcs = sorted({c["func"] for kind in ("changed", "gone", "new") for c in d[kind]})
