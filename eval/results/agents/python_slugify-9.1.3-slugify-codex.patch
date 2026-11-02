@@ -1,0 +1,72 @@
+--- a/slugify/slugify.py
++++ b/slugify/slugify.py
+@@ -12,7 +12,7 @@
+ __all__ = ['slugify', 'smart_truncate', 'Backend', 'ReplacementStage', 'Algorithm']
+ 
+ 
+-CHAR_ENTITY_PATTERN = re.compile(r'&(%s);' % '|'.join(name2codepoint))
++CHAR_ENTITY_PATTERN = re.compile(rf"&({'|'.join(name2codepoint)});")
+ DECIMAL_PATTERN = re.compile(r'&#(\d+);')
+ MODERN_HEX_PATTERN = re.compile(r'&#[xX]([\da-fA-F]+);')
+ QUOTE_PATTERN = re.compile(r"[']+")
+@@ -45,6 +45,13 @@
+         text = DECIMAL_PATTERN.sub(lambda m: _numeric_reference(m, 10), text)
+     if hexadecimal:
+         text = MODERN_HEX_PATTERN.sub(lambda m: _numeric_reference(m, 16), text)
++    return text
++
++
++def _apply_replacements(text: str, rules: tuple[tuple[str, str], ...]) -> str:
++    """Apply literal replacement rules in their original order."""
++    for old, new in rules:
++        text = text.replace(old, new)
+     return text
+ 
+ 
+@@ -72,10 +79,9 @@
+     Output delimiters may also occur in words; never strip or split emitted text.
+     Post replacements retain the historical global dash-to-separator mapping.
+     """
+-    if max_length <= 0:
+-        return text.replace(DEFAULT_SEPARATOR, separator)
+-    output_length = len(text) + text.count(DEFAULT_SEPARATOR) * (len(separator) - 1)
+-    if output_length <= max_length:
++    if max_length <= 0 or (
++        len(text) + text.count(DEFAULT_SEPARATOR) * (len(separator) - 1) <= max_length
++    ):
+         return text.replace(DEFAULT_SEPARATOR, separator)
+     tokens = text.split(DEFAULT_SEPARATOR)
+     if word_boundary:
+@@ -154,16 +160,15 @@
+     # Materialize rules once: consumption of an iterator would affect output.
+     rules = tuple((old, new) for old, new in replacements) if replacements else ()
+     if rules and replacement_stage in ('both', 'pre'):
+-        for old, new in rules:
+-            text = text.replace(old, new)
++        text = _apply_replacements(text, rules)
+ 
+     text = _decode_entities(text, entities, decimal, hexadecimal)
+     text = QUOTE_PATTERN.sub(DEFAULT_SEPARATOR, text)
+-    if allow_unicode:
+-        text = unicodedata.normalize('NFKC', text)
+-    else:
+-        text = _transliterate(unicodedata.normalize('NFKD', text), backend)
+-    text = unicodedata.normalize('NFKC' if allow_unicode else 'NFKD', text)
++    normalization = 'NFKC' if allow_unicode else 'NFKD'
++    text = unicodedata.normalize(normalization, text)
++    if not allow_unicode:
++        text = _transliterate(text, backend)
++    text = unicodedata.normalize(normalization, text)
+     if lowercase:
+         text = text.lower()
+     text = QUOTE_PATTERN.sub('', text)
+@@ -176,8 +181,7 @@
+         excluded = {word.lower() if lowercase else word for word in stopwords}
+         text = DEFAULT_SEPARATOR.join(word for word in text.split(DEFAULT_SEPARATOR) if word not in excluded)
+     if rules and replacement_stage in ('both', 'post'):
+-        for old, new in rules:
+-            text = text.replace(old, new)
++        text = _apply_replacements(text, rules)
+ 
+     return _modern_truncate(text, max_length, word_boundary, separator, save_order)
+ 

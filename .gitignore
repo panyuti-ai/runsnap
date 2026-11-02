@@ -4,3 +4,4 @@ __pycache__/
 .runsnap/
 .pytest_cache/
 eval/results/snaps-*/
+eval/results/agents/*.log

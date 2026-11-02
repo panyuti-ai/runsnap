@@ -1,0 +1,77 @@
+{
+ "project": "toolz-1.2.0",
+ "file": "toolz/itertoolz.py",
+ "agent": "claude",
+ "prompt": "Refactor toolz/itertoolz.py to make it cleaner and easier to maintain: simplify logic, remove duplication, and use modern Python idioms. Keep the public API the same and do not change behavior. Only edit toolz/itertoolz.py. You can run the test suite with:\n  /home/user/runsnap/.venv/bin/python -m pytest -q -p no:cacheprovider toolz/tests",
+ "agent_run": {
+  "exit": 0,
+  "seconds": 168
+ },
+ "files_touched": [
+  "toolz/itertoolz.py"
+ ],
+ "patch_lines": 300,
+ "tests_before": {
+  "passed": 187,
+  "failed": 0,
+  "errors": 0
+ },
+ "tests_after": {
+  "passed": 187,
+  "failed": 0,
+  "errors": 0
+ },
+ "tests_pass": true,
+ "changed": 1,
+ "gone": 1,
+ "new": 9,
+ "functions_flagged": [
+  "toolz.dicttoolz.merge",
+  "toolz.itertoolz.getter",
+  "toolz.itertoolz.getter.<locals>.<lambda>",
+  "toolz.itertoolz.interpose",
+  "toolz.tests.test_inspect_args.test_introspect_builtin_modules.<locals>.is_missing"
+ ],
+ "examples": [
+  {
+   "kind": "changed",
+   "test": "toolz/tests/test_itertoolz.py::test_interpose_empty",
+   "func": "toolz.itertoolz.interpose",
+   "args": "el='a', seq=[]",
+   "before": "returns <list_iterator object at 0x…>",
+   "after": "returns <itertools.chain object at 0x…>"
+  },
+  {
+   "kind": "gone",
+   "test": "toolz/tests/test_tlz.py::test_tlz",
+   "func": "toolz.dicttoolz.merge",
+   "args": "dicts=({'Sequence': <class 'collections.abc.Sequence'>, '__all__': ('remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave', 'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth', 'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv', 'mapcat', 'cons', ...), '__builtins__': {'ArithmeticError': <class 'ArithmeticError'>, 'AssertionError': <class 'AssertionError'>, 'AttributeError': <class 'AttributeError'>, 'BaseException': <class 'BaseException'>, 'BaseExceptionGroup': <class 'BaseExceptionGroup'>, 'BlockingIOError': <class 'BlockingIOError'>, 'BrokenPipeError': <class 'BrokenPipeError'>, 'BufferError': <class 'BufferError'>, 'BytesWarning': <class 'BytesWarning'>, 'ChildProcessError': <class 'ChildProcessError'>, 'ConnectionAbortedError': <class 'ConnectionAbortedError'>, 'ConnectionError': <class 'ConnectionError'>, 'ConnectionRefusedError': <class 'ConnectionRefusedError'>, 'ConnectionResetError': <class 'ConnectionResetError'>, 'DeprecationWarning': <class 'DeprecationWarning'>, 'EOFError': <class 'EOFError'>, 'Ellipsis': Ellipsis, 'EncodingWarning': <class 'EncodingWarning'>, 'EnvironmentError': <class 'OSError'>, 'Exception': <class 'Exception'>, ...}, '__cached__': '/tmp/claude-0/-home-user/7dcced1b-269c-54f1-b09a-b30a9e544490/scratchpad/eval-src/toolz-1.2.0/toolz/__pycache__/itertoolz.cpython-313.pyc', '__doc__': None, '__file__': '/tmp/claude-0/-home-user/7dcced1b-269c-54f1-b09a-b30a9e544490/scratchpad/eval-src/toolz-1.2.0/toolz/itertoolz.py', '__loader__': <_frozen_importlib_external.SourceFileLoader object at 0x…>, '__name__': 'toolz.itertoolz', '__package__': 'toolz', '__spec__': ModuleSpec(name='toolz.itertoolz', loader=<_frozen_importlib_external.SourceFileLoader object at 0...home-user/7dcced1b-269c-54f1-b09a-b30a9e544490/scratchpad/eval-src/toolz-1.2.0/toolz/itertoolz.py'), '_get': <function _get at 0x…>, '_merge_sorted_binary': <function _merge_sorted_binary at 0x…>, '_merge_sorted_binary_key': <function _merge_sorted_binary_key at 0x…>, 'accumulate': <function accumulate at 0x…>, 'collections': <module 'collections' from '/usr/lib/python3.13/collections/__init__.py'>, 'concat': <function concat at 0x…>, 'concatv': <function concatv at 0x…>, 'cons': <function cons at 0x…>, 'count': <function count at 0x…>, 'diff': <function diff at 0x…>, ...}, {'__doc__': None, '__loader__': <tlz._build_tlz.TlzLoader object at 0x…>, '__name__': 'tlz.itertoolz', '__package__': 'tlz', '__spec__': ModuleSpec(name='tlz.itertoolz', loader=<tlz._build_tlz.TlzLoader object at 0x…>)}), kwargs={}",
+   "before": "returns {'Sequence': <class 'collections.abc.Sequence'>, '__all__': ('remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave', 'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth', 'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv', 'mapcat', 'cons', ...), '__builtins__': {'ArithmeticError': <class 'ArithmeticError'>, 'AssertionError': <class 'AssertionError'>, 'AttributeError': <class 'AttributeError'>, 'BaseException': <class 'BaseException'>, 'BaseExceptionGroup': <class 'BaseExceptionGroup'>, 'BlockingIOError': <class 'BlockingIOError'>, 'BrokenPipeError': <class 'BrokenPipeError'>, 'BufferError': <class 'BufferError'>, 'BytesWarning': <class 'BytesWarning'>, 'ChildProcessError': <class 'ChildProcessError'>, 'ConnectionAbortedError': <class 'ConnectionAbortedError'>, 'ConnectionError': <class 'ConnectionError'>, 'ConnectionRefusedError': <class 'ConnectionRefusedError'>, 'ConnectionResetError': <class 'ConnectionResetError'>, 'DeprecationWarning': <class 'DeprecationWarning'>, 'EOFError': <class 'EOFError'>, 'Ellipsis': Ellipsis, 'EncodingWarning': <class 'EncodingWarning'>, 'EnvironmentError': <class 'OSError'>, 'Exception': <class 'Exception'>, ...}, '__cached__': '/tmp/claude-0/-home-user/7dcced1b-269c-54f1-b09a-b30a9e544490/scratchpad/eval-src/toolz-1.2.0/toolz/__pycache__/itertoolz.cpython-313.pyc', '__doc__': None, '__file__': '/tmp/claude-0/-home-user/7dcced1b-269c-54f1-b09a-b30a9e544490/scratchpad/eval-src/toolz-1.2.0/toolz/itertoolz.py', '__loader__': <tlz._build_tlz.TlzLoader object at 0x…>, '__name__': 'tlz.itertoolz', '__package__': 'tlz', '__spec__': ModuleSpec(name='tlz.itertoolz', loader=<tlz._build_tlz.TlzLoader object at 0x…>), '_get': <function _get at 0x…>, '_merge_sorted_binary': <function _merge_sorted_binary at 0x…>, '_merge_sorted_binary_key': <function _merge_sorted_binary_key at 0x…>, 'accumulate': <function accumulate at 0x…>, 'collections': <module 'collections' from '/usr/lib/python3.13/collections/__init__.py'>, 'concat': <function concat at 0x…>, 'concatv': <function concatv at 0x…>, 'cons': <function cons at 0x…>, 'count': <function count at 0x…>, 'diff': <function diff at 0x…>, ...}",
+   "after": null
+  },
+  {
+   "kind": "new",
+   "test": "toolz/tests/test_inspect_args.py::test_introspect_builtin_modules",
+   "func": "toolz.tests.test_inspect_args.test_introspect_builtin_modules.<locals>.is_missing",
+   "args": "modname='toolz.itertoolz', name='_first_pad_index', func=<function _first_pad_index at 0x…>",
+   "before": null,
+   "after": "returns False"
+  },
+  {
+   "kind": "new",
+   "test": "toolz/tests/test_inspect_args.py::test_introspect_builtin_modules",
+   "func": "toolz.tests.test_inspect_args.test_introspect_builtin_modules.<locals>.is_missing",
+   "args": "modname='toolz.itertoolz', name='_split_merge', func=<function _split_merge at 0x…>",
+   "before": null,
+   "after": "returns False"
+  },
+  {
+   "kind": "new",
+   "test": "toolz/tests/test_itertoolz.py::test_get",
+   "func": "toolz.itertoolz.getter",
+   "args": "index=['a', 'b']",
+   "before": null,
+   "after": "returns operator.itemgetter('a', 'b')"
+  }
+ ]
+}

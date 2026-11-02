@@ -1,0 +1,174 @@
+--- a/slugify/slugify.py
++++ b/slugify/slugify.py
+@@ -2,10 +2,10 @@
+ 
+ import re
+ import unicodedata
+-from collections.abc import Iterable
++from collections.abc import Iterable, Iterator
+ from html.entities import name2codepoint
+ from importlib import import_module
+-from typing import Literal
++from typing import Literal, get_args
+ 
+ from ._legacy import slugify as _legacy_slugify, smart_truncate
+ 
+@@ -31,11 +31,11 @@
+     """Leave invalid references for ordinary filtering, independently of neighbors."""
+     try:
+         value = int(match.group(1), base)
+-        if 0xD800 <= value <= 0xDFFF:
+-            return match.group(0)
+-        return chr(value)
++        if not 0xD800 <= value <= 0xDFFF:
++            return chr(value)
+     except (ValueError, OverflowError):
+-        return match.group(0)
++        pass
++    return match.group(0)
+ 
+ 
+ def _decode_entities(text: str, entities: bool, decimal: bool, hexadecimal: bool) -> str:
+@@ -66,31 +66,43 @@
+     return result
+ 
+ 
++def _apply_replacements(text: str, rules: Iterable[tuple[str, str]]) -> str:
++    for old, new in rules:
++        text = text.replace(old, new)
++    return text
++
++
++def _delimited_words(tokens: list[str], separator: str) -> Iterator[tuple[str, str]]:
++    """Yield (delimiter, word) for each nonempty token.
++
++    The delimiter repeats the separator once per dash before the word, so
++    delimiter runs (e.g. from post replacements) stay attached to the next word.
++    """
++    previous_index = 0
++    for index, word in enumerate(tokens):
++        if word:
++            yield separator * (index - previous_index), word
++            previous_index = index
++
++
+ def _modern_truncate(text: str, max_length: int, word_boundary: bool, separator: str, save_order: bool) -> str:
+     """Budget internal dash-separated tokens before mapping output delimiters.
+ 
+     Output delimiters may also occur in words; never strip or split emitted text.
+     Post replacements retain the historical global dash-to-separator mapping.
+     """
+-    if max_length <= 0:
+-        return text.replace(DEFAULT_SEPARATOR, separator)
+     output_length = len(text) + text.count(DEFAULT_SEPARATOR) * (len(separator) - 1)
+-    if output_length <= max_length:
++    if max_length <= 0 or output_length <= max_length:
+         return text.replace(DEFAULT_SEPARATOR, separator)
+     tokens = text.split(DEFAULT_SEPARATOR)
++
+     if word_boundary:
+         words: list[str] = []
+         length = 0
+-        previous_index = 0
+-        first_word = True
+-        for index, word in enumerate(tokens):
+-            if not word:
+-                continue
+-            # Keep the full delimiter run attached to each retained word.
++        for position, (delimiter, word) in enumerate(_delimited_words(tokens, separator)):
+             # Skipping an oversized first word must not add a leading delimiter.
+-            delimiter = separator * (index - previous_index) if words or first_word else ''
+-            previous_index = index
+-            first_word = False
++            if position and not words:
++                delimiter = ''
+             next_length = length + len(delimiter) + len(word)
+             if next_length <= max_length:
+                 words.append(delimiter + word)
+@@ -99,21 +111,17 @@
+                 break
+         if words:
+             return ''.join(words)
++
+     # A hard cut may shorten a word but must not emit a partial/trailing delimiter.
+     parts: list[str] = []
+     length = 0
+-    previous_index = 0
+-    for index, word in enumerate(tokens):
+-        if not word:
+-            continue
+-        # Keep repeated delimiters with the next nonempty word until it fits.
+-        delimiter = separator * (index - previous_index)
++    for delimiter, word in _delimited_words(tokens, separator):
+         remaining = max_length - length - len(delimiter)
+         if remaining <= 0:
+             break
+-        parts.append(delimiter + word[:remaining])
+-        length += len(delimiter) + min(len(word), remaining)
+-        previous_index = index
++        piece = delimiter + word[:remaining]
++        parts.append(piece)
++        length += len(piece)
+         if len(word) > remaining:
+             break
+     return ''.join(parts)
+@@ -142,20 +150,20 @@
+         raise TypeError(f"max_length must be an int, not {type(max_length).__name__}")
+     if not isinstance(separator, str):
+         raise TypeError(f"separator must be str, not {type(separator).__name__}")
+-    if not isinstance(text, str):
+-        if not isinstance(text, (bytes, bytearray)):
+-            raise TypeError(f'text must be str, bytes or bytearray, not {type(text).__name__}')
++    if isinstance(text, (bytes, bytearray)):
+         text = text.decode('utf-8', 'ignore')
+-    if replacement_stage not in ('both', 'pre', 'post'):
++    elif not isinstance(text, str):
++        raise TypeError(f'text must be str, bytes or bytearray, not {type(text).__name__}')
++    if replacement_stage not in get_args(ReplacementStage):
+         raise ValueError("replacement_stage must be 'both', 'pre' or 'post'")
+-    if backend not in ('auto', 'text-unidecode', 'unidecode', 'anyascii'):
++    if backend not in get_args(Backend):
+         raise ValueError("backend must be 'auto', 'text-unidecode', 'unidecode' or 'anyascii'")
+ 
+     # Materialize rules once: consumption of an iterator would affect output.
+     rules = tuple((old, new) for old, new in replacements) if replacements else ()
+-    if rules and replacement_stage in ('both', 'pre'):
+-        for old, new in rules:
+-            text = text.replace(old, new)
++
++    if replacement_stage in ('both', 'pre'):
++        text = _apply_replacements(text, rules)
+ 
+     text = _decode_entities(text, entities, decimal, hexadecimal)
+     text = QUOTE_PATTERN.sub(DEFAULT_SEPARATOR, text)
+@@ -163,7 +171,7 @@
+         text = unicodedata.normalize('NFKC', text)
+     else:
+         text = _transliterate(unicodedata.normalize('NFKD', text), backend)
+-    text = unicodedata.normalize('NFKC' if allow_unicode else 'NFKD', text)
++        text = unicodedata.normalize('NFKD', text)
+     if lowercase:
+         text = text.lower()
+     text = QUOTE_PATTERN.sub('', text)
+@@ -175,9 +183,9 @@
+     if stopwords:
+         excluded = {word.lower() if lowercase else word for word in stopwords}
+         text = DEFAULT_SEPARATOR.join(word for word in text.split(DEFAULT_SEPARATOR) if word not in excluded)
+-    if rules and replacement_stage in ('both', 'post'):
+-        for old, new in rules:
+-            text = text.replace(old, new)
++
++    if replacement_stage in ('both', 'post'):
++        text = _apply_replacements(text, rules)
+ 
+     return _modern_truncate(text, max_length, word_boundary, separator, save_order)
+ 
+@@ -215,7 +223,7 @@
+     installed Unidecode, falling back to text-unidecode; explicit choices do not
+     fall back. All new controls are keyword-only.
+     """
+-    if algorithm not in ('legacy', 'modern'):
++    if algorithm not in get_args(Algorithm):
+         raise ValueError("algorithm must be 'legacy' or 'modern'")
+     if algorithm == 'legacy':
+         return _legacy_slugify(
