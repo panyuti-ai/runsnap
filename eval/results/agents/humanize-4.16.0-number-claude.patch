@@ -1,0 +1,313 @@
+--- a/src/humanize/number.py
++++ b/src/humanize/number.py
+@@ -2,9 +2,10 @@
+ 
+ from __future__ import annotations
+ 
+-__lazy_modules__ = {"bisect"}
++__lazy_modules__ = {"bisect", "math"}
+ 
+ import bisect
++import math
+ 
+ from .i18n import _gettext as _
+ from .i18n import _ngettext, decimal_separator, thousands_separator
+@@ -20,22 +21,9 @@
+     NumberOrString: TypeAlias = float | str
+ 
+ 
+-_SUPERSCRIPT_MAP = {
+-    "0": "⁰",
+-    "1": "¹",
+-    "2": "²",
+-    "3": "³",
+-    "4": "⁴",
+-    "5": "⁵",
+-    "6": "⁶",
+-    "7": "⁷",
+-    "8": "⁸",
+-    "9": "⁹",
+-    "-": "⁻",
+-}
+-_SUPERSCRIPT_TRANS = str.maketrans(_SUPERSCRIPT_MAP)
+-
+-_ORDINAL_SUFFIXES = ("th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th")
++_SUPERSCRIPT_TRANS = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
++
++_ORDINAL_SUFFIXES = ("th", "st", "nd", "rd") + ("th",) * 6
+ _APNUMBER_WORDS = (
+     "zero",
+     "one",
+@@ -52,15 +40,26 @@
+ 
+ def _format_not_finite(value: float) -> str:
+     """Utility function to handle infinite and nan cases."""
+-    import math
+-
+     if math.isnan(value):
+         return "NaN"
+-    if math.isinf(value) and value < 0:
+-        return "-Inf"
+-    if math.isinf(value) and value > 0:
+-        return "+Inf"
++    if math.isinf(value):
++        return "-Inf" if value < 0 else "+Inf"
+     return ""
++
++
++def _to_int(value: NumberOrString) -> int | str:
++    """Convert value to an int, or return the string to display instead.
++
++    Non-finite numbers give "NaN", "+Inf" or "-Inf". Values that can't be converted
++    give `str(value)`.
++    """
++    try:
++        number = float(value)
++        if not math.isfinite(number):
++            return _format_not_finite(number)
++        return int(value)
++    except (TypeError, ValueError):
++        return str(value)
+ 
+ 
+ def ordinal(value: NumberOrString, gender: str = "male") -> str:
+@@ -100,14 +99,9 @@
+     Returns:
+         str: Ordinal string.
+     """
+-    import math
+-
+-    try:
+-        if not math.isfinite(float(value)):
+-            return _format_not_finite(float(value))
+-        value = int(value)
+-    except (TypeError, ValueError):
+-        return str(value)
++    value = _to_int(value)
++    if isinstance(value, str):
++        return value
+     gender = "male" if gender == "male" else "female"
+     digit = 0 if value % 100 in (11, 12, 13) else value % 10
+     return f"{value}{P_(f'{digit} ({gender})', _ORDINAL_SUFFIXES[digit])}"
+@@ -147,30 +141,20 @@
+     Returns:
+         str: String containing commas every three digits.
+     """
+-    import math
+-
+     thousands_sep = thousands_separator()
+     decimal_sep = decimal_separator()
+     try:
+         if isinstance(value, str):
+             value = value.replace(thousands_sep, "").replace(decimal_sep, ".")
+-            if not math.isfinite(float(value)):
+-                return _format_not_finite(float(value))
+-            if "." in value:
+-                value = float(value)
+-            else:
+-                value = int(value)
+-        else:
+-            if not math.isfinite(float(value)):
+-                return _format_not_finite(float(value))
+-            float(value)
++        number = float(value)
++        if not math.isfinite(number):
++            return _format_not_finite(number)
++        if isinstance(value, str):
++            value = number if "." in value else int(value)
+     except (TypeError, ValueError):
+         return str(value)
+ 
+-    if ndigits is not None:
+-        result = f"{value:,.{ndigits}f}"
+-    else:
+-        result = f"{value:,}"
++    result = f"{value:,.{ndigits}f}" if ndigits is not None else f"{value:,}"
+     if thousands_sep != "," or decimal_sep != ".":
+         result = result.translate(str.maketrans(",.", thousands_sep + decimal_sep))
+     return result
+@@ -228,20 +212,12 @@
+         str: Friendly text representation as a string, unless the value passed could not
+             be coaxed into an `int`.
+     """
+-    import math
+-
+-    try:
+-        if not math.isfinite(float(value)):
+-            return _format_not_finite(float(value))
+-        value = int(value)
+-    except (TypeError, ValueError):
+-        return str(value)
+-
+-    if value < 0:
+-        value *= -1
+-        negative_prefix = "-"
+-    else:
+-        negative_prefix = ""
++    value = _to_int(value)
++    if isinstance(value, str):
++        return value
++
++    negative_prefix = "-" if value < 0 else ""
++    value = abs(value)
+ 
+     if value < powers[0]:
+         return f"{negative_prefix}{value}"
+@@ -262,8 +238,7 @@
+ 
+     singular, plural = human_powers[ordinal]
+     unit = _ngettext(singular, plural, math.ceil(rounded_value))
+-    decimal_sep = decimal_separator()
+-    number = (format % rounded_value).replace(".", decimal_sep)
++    number = (format % rounded_value).replace(".", decimal_separator())
+     return f"{negative_prefix}{number} {unit}"
+ 
+ 
+@@ -295,14 +270,9 @@
+             returns a string unless the value was not `int`-able, then `str(value)`
+             is returned.
+     """
+-    import math
+-
+-    try:
+-        if not math.isfinite(float(value)):
+-            return _format_not_finite(float(value))
+-        value = int(value)
+-    except (TypeError, ValueError):
+-        return str(value)
++    value = _to_int(value)
++    if isinstance(value, str):
++        return value
+     if not 0 <= value < 10:
+         return str(value)
+     return _(_APNUMBER_WORDS[value])
+@@ -347,34 +317,32 @@
+     Returns:
+         str: Fractional number as a string.
+     """
+-    import math
+-
+     try:
+         number = float(value)
+-        if not math.isfinite(number):
+-            return _format_not_finite(number)
+     except (TypeError, ValueError):
+         return str(value)
++    if not math.isfinite(number):
++        return _format_not_finite(number)
++
+     from fractions import Fraction
+ 
+     whole_number = int(number)
+     frac = Fraction(number - whole_number).limit_denominator(1000)
+-    numerator = frac.numerator
+-    denominator = frac.denominator
+-    if whole_number and not numerator and denominator == 1:
+-        # this means that an integer was passed in
+-        # (or variants of that integer like 1.0000)
+-        return f"{whole_number:.0f}"
++    numerator, denominator = frac.numerator, frac.denominator
+ 
+     if not whole_number:
+-        return f"{numerator:.0f}/{denominator:.0f}"
++        return f"{numerator}/{denominator}"
++
++    if not numerator:
++        # An integer was passed in (or a variant of one, like 1.0000)
++        return f"{whole_number}"
+ 
+     # int() truncates toward zero, so for a negative number both
+     # whole_number and numerator carry the minus sign, which prints as
+     # "-1 -3/10". The sign already rides on the whole part; absorb it
+     # from the fractional part so the result reads as a normal mixed
+     # fraction.
+-    return f"{whole_number:.0f} {abs(numerator):.0f}/{denominator:.0f}"
++    return f"{whole_number} {abs(numerator)}/{denominator}"
+ 
+ 
+ def scientific(value: NumberOrString, precision: int = 2) -> str:
+@@ -408,20 +376,17 @@
+     Returns:
+         str: Number in scientific notation z.wq x 10ⁿ.
+     """
+-    import math
+-
+     try:
+         value = float(value)
+-        if not math.isfinite(value):
+-            return _format_not_finite(value)
+     except (ValueError, TypeError):
+         return str(value)
+-    fmt = f"{{:.{int(precision)}e}}"
+-    n = fmt.format(value)
+-    part1, part2 = n.split("e")
++    if not math.isfinite(value):
++        return _format_not_finite(value)
++
++    mantissa, exponent = f"{value:.{int(precision)}e}".split("e")
+     # Normalise exponent: int() strips the "+" sign and leading zeros,
+     # while preserving "-" and a single "0" for 10⁰.
+-    return part1 + " x 10" + str(int(part2)).translate(_SUPERSCRIPT_TRANS)
++    return f"{mantissa} x 10{str(int(exponent)).translate(_SUPERSCRIPT_TRANS)}"
+ 
+ 
+ def clamp(
+@@ -471,8 +436,6 @@
+             will be prepended with a token indicating as such.
+ 
+     """
+-    import math
+-
+     if value is None:
+         return None
+ 
+@@ -536,34 +499,30 @@
+     Returns:
+         str:
+     """
+-    import math
+-
+     if not math.isfinite(value):
+         return _format_not_finite(value)
+-    exponent = int(math.floor(math.log10(abs(value)))) if value != 0 else 0
++    exponent = math.floor(math.log10(abs(value))) if value != 0 else 0
+ 
+     if exponent >= 33 or exponent < -30:
+         return scientific(value, precision - 1) + unit
+ 
+-    old_bucket = exponent // 3 * 3
+-    value /= 10**old_bucket
++    # Scale into the [1, 1000) range of the nearest lower multiple of 3
++    bucket = exponent // 3 * 3
++    value /= 10**bucket
+     digits = int(max(0, precision - exponent % 3 - 1))
+     if exponent < 30 and round(abs(value), digits) >= 1000:
+-        exponent += 3 - exponent % 3
+-        new_bucket = exponent // 3 * 3
+-        value /= 10 ** (new_bucket - old_bucket)
+-        digits = int(max(0, precision - exponent % 3 - 1))
++        # Rounding pushed us up to the next prefix (e.g. 999.95 -> 1000)
++        exponent = bucket + 3
++        value /= 1000
++        digits = int(max(0, precision - 1))
+ 
+     if exponent >= 3:
+-        ordinal_ = "kMGTPEZYRQ"[exponent // 3 - 1]
++        prefix = "kMGTPEZYRQ"[exponent // 3 - 1]
+     elif exponent < 0:
+-        ordinal_ = "mμnpfazyrq"[(-exponent - 1) // 3]
++        prefix = "mμnpfazyrq"[(-exponent - 1) // 3]
+     else:
+-        ordinal_ = ""
+-    value_ = format(value, f".{digits}f")
+-    if not (unit or ordinal_) or unit in ("°", "′", "″"):
+-        space = ""
+-    else:
+-        space = " "
+-
+-    return f"{value_}{space}{ordinal_}{unit}"
++        prefix = ""
++
++    no_space = not (unit or prefix) or unit in ("°", "′", "″")
++    space = "" if no_space else " "
++    return f"{value:.{digits}f}{space}{prefix}{unit}"

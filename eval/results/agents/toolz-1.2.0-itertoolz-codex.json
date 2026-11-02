@@ -1,0 +1,76 @@
+{
+ "project": "toolz-1.2.0",
+ "file": "toolz/itertoolz.py",
+ "agent": "codex",
+ "prompt": "Refactor toolz/itertoolz.py to make it cleaner and easier to maintain: simplify logic, remove duplication, and use modern Python idioms. Keep the public API the same and do not change behavior. Only edit toolz/itertoolz.py. You can run the test suite with:\n  /home/user/runsnap/.venv/bin/python -m pytest -q -p no:cacheprovider toolz/tests",
+ "agent_run": {
+  "exit": 0,
+  "seconds": 51
+ },
+ "files_touched": [
+  "toolz/itertoolz.py"
+ ],
+ "patch_lines": 104,
+ "tests_before": {
+  "passed": 187,
+  "failed": 0,
+  "errors": 0
+ },
+ "tests_after": {
+  "passed": 187,
+  "failed": 0,
+  "errors": 0
+ },
+ "tests_pass": true,
+ "changed": 1,
+ "gone": 2,
+ "new": 8,
+ "functions_flagged": [
+  "toolz.functoolz.identity",
+  "toolz.itertoolz.getter",
+  "toolz.itertoolz.getter.<locals>.<lambda>",
+  "toolz.itertoolz.merge_sorted"
+ ],
+ "examples": [
+  {
+   "kind": "changed",
+   "test": "toolz/tests/test_itertoolz.py::test_merge_sorted",
+   "func": "toolz.itertoolz.merge_sorted",
+   "args": "seqs=(), kwargs={}",
+   "before": "returns <list_iterator object at 0x…>",
+   "after": "returns <tuple_iterator object at 0x…>"
+  },
+  {
+   "kind": "gone",
+   "test": "toolz/tests/test_dicttoolz.py::test_environ",
+   "func": "toolz.functoolz.identity",
+   "args": "x='/home/user/runsnap'",
+   "before": "returns '/home/user/runsnap'",
+   "after": null
+  },
+  {
+   "kind": "gone",
+   "test": "toolz/tests/test_dicttoolz.py::test_environ",
+   "func": "toolz.functoolz.identity",
+   "args": "x=('OLDPWD', '/home/user/runsnap')",
+   "before": "returns ('OLDPWD', '/home/user/runsnap')",
+   "after": null
+  },
+  {
+   "kind": "new",
+   "test": "toolz/tests/test_dicttoolz.py::test_environ",
+   "func": "toolz.functoolz.identity",
+   "args": "x='/home/user'",
+   "before": null,
+   "after": "returns '/home/user'"
+  },
+  {
+   "kind": "new",
+   "test": "toolz/tests/test_dicttoolz.py::test_environ",
+   "func": "toolz.functoolz.identity",
+   "args": "x=('OLDPWD', '/home/user')",
+   "before": null,
+   "after": "returns ('OLDPWD', '/home/user')"
+  }
+ ]
+}

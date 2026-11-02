@@ -1,0 +1,181 @@
+--- a/toolz/itertoolz.py
++++ b/toolz/itertoolz.py
+@@ -98,10 +98,7 @@
+     d = collections.defaultdict(lambda: [].append)
+     for item in seq:
+         d[key(item)](item)
+-    rv = {}
+-    for k, v in d.items():
+-        rv[k] = v.__self__
+-    return rv
++    return {k: v.__self__ for k, v in d.items()}
+ 
+ 
+ def merge_sorted(*seqs, **kwargs):
+@@ -120,16 +117,15 @@
+     >>> list(merge_sorted([2, 3], [1, 3], key=lambda x: x // 3))
+     [2, 1, 3, 3]
+     """
+-    if len(seqs) == 0:
+-        return iter([])
+-    elif len(seqs) == 1:
++    if not seqs:
++        return iter(())
++    if len(seqs) == 1:
+         return iter(seqs[0])
+ 
+-    key = kwargs.get('key', None)
++    key = kwargs.get('key')
+     if key is None:
+         return _merge_sorted_binary(seqs)
+-    else:
+-        return _merge_sorted_binary_key(seqs, key)
++    return _merge_sorted_binary_key(seqs, key)
+ 
+ 
+ def _merge_sorted_binary(seqs):
+@@ -388,8 +384,7 @@
+     """
+     if isinstance(seq, (tuple, list, Sequence)):
+         return seq[n]
+-    else:
+-        return next(itertools.islice(seq, n, None))
++    return next(itertools.islice(seq, n, None))
+ 
+ 
+ def last(seq):
+@@ -449,14 +444,8 @@
+     except TypeError:  # `ind` may be a list
+         if isinstance(ind, list):
+             if default == no_default:
+-                if len(ind) > 1:
+-                    return operator.itemgetter(*ind)(seq)
+-                elif ind:
+-                    return seq[ind[0]],
+-                else:
+-                    return ()
+-            else:
+-                return tuple(_get(i, seq, default) for i in ind)
++                return getter(ind)(seq)
++            return tuple(_get(i, seq, default) for i in ind)
+         elif default != no_default:
+             return default
+         else:
+@@ -464,8 +453,7 @@
+     except (KeyError, IndexError):  # we know `ind` is not a list
+         if default == no_default:
+             raise
+-        else:
+-            return default
++        return default
+ 
+ 
+ def concat(seqs):
+@@ -623,8 +611,7 @@
+             if is_no_default:
+                 d[k] = item
+                 continue
+-            else:
+-                d[k] = init()
++            d[k] = init()
+         d[k] = binop(d[k], item)
+     return d
+ 
+@@ -700,8 +687,7 @@
+     args = [iter(seq)] * n
+     if pad is no_pad:
+         return zip(*args)
+-    else:
+-        return zip_longest(*args, fillvalue=pad)
++    return zip_longest(*args, fillvalue=pad)
+ 
+ 
+ def partition_all(n, seq):
+@@ -793,9 +779,8 @@
+         map
+     """
+     if default == no_default:
+-        get = getter(ind)
+-        return map(get, seqs)
+-    elif isinstance(ind, list):
++        return map(getter(ind), seqs)
++    if isinstance(ind, list):
+         return (tuple(_get(item, seq, default) for item in ind)
+                 for seq in seqs)
+     return (_get(ind, seq, default) for seq in seqs)
+@@ -806,12 +791,10 @@
+         if len(index) == 1:
+             index = index[0]
+             return lambda x: (x[index],)
+-        elif index:
++        if index:
+             return operator.itemgetter(*index)
+-        else:
+-            return lambda x: ()
+-    else:
+-        return operator.itemgetter(index)
++        return lambda x: ()
++    return operator.itemgetter(index)
+ 
+ 
+ def join(leftkey, leftseq, rightkey, rightseq,
+@@ -881,45 +864,20 @@
+ 
+     d = groupby(leftkey, leftseq)
+ 
+-    if left_default == no_default and right_default == no_default:
+-        # Inner Join
+-        for item in rightseq:
+-            key = rightkey(item)
+-            if key in d:
+-                for left_match in d[key]:
+-                    yield (left_match, item)
+-    elif left_default != no_default and right_default == no_default:
+-        # Right Join
+-        for item in rightseq:
+-            key = rightkey(item)
+-            if key in d:
+-                for left_match in d[key]:
+-                    yield (left_match, item)
+-            else:
+-                yield (left_default, item)
+-    elif right_default != no_default:
+-        seen_keys = set()
+-        seen = seen_keys.add
+-
+-        if left_default == no_default:
+-            # Left Join
+-            for item in rightseq:
+-                key = rightkey(item)
+-                seen(key)
+-                if key in d:
+-                    for left_match in d[key]:
+-                        yield (left_match, item)
+-        else:
+-            # Full Join
+-            for item in rightseq:
+-                key = rightkey(item)
+-                seen(key)
+-                if key in d:
+-                    for left_match in d[key]:
+-                        yield (left_match, item)
+-                else:
+-                    yield (left_default, item)
+-
++    # Track right-hand keys only when unmatched left-hand rows are needed.
++    seen_keys = set() if right_default != no_default else None
++    include_unmatched_right = left_default != no_default
++    for item in rightseq:
++        key = rightkey(item)
++        if seen_keys is not None:
++            seen_keys.add(key)
++        if key in d:
++            for left_match in d[key]:
++                yield (left_match, item)
++        elif include_unmatched_right:
++            yield (left_default, item)
++
++    if seen_keys is not None:
+         for key, matches in d.items():
+             if key not in seen_keys:
+                 for match in matches:

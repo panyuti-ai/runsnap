@@ -19,6 +19,10 @@ Behavior changed: 1
 
 Coding agents change code they did not write, and tests often do not pin down everything the code does. In a 2026 study of multi-step feature work, agents went back and noticed an earlier mistake in only about 5% of the later steps ([FeatureArc, arXiv:2610.37434](https://arxiv.org/abs/2610.37434)). "Which behavior did this change touch?" should not depend on the agent noticing.
 
+## What it found
+
+We asked Claude Code and Codex to refactor four files from humanize, python-slugify and toolz without changing behavior. All 8 refactors passed the projects' tests. runsnap confirmed that 6 kept every recorded result the same, and pointed at the other 2: in both, an empty input now returns a different kind of iterator (`interpose('a', [])` returns `itertools.chain` instead of `list_iterator`), which no test checks. In a separate experiment with 240 small injected bugs, it showed a changed result for 4 of the 45 the tests ran but missed. Details and raw data: [eval/](eval/).
+
 ## Install
 
 Python 3.12+ (uses `sys.monitoring`).

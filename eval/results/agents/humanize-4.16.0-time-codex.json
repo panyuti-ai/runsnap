@@ -1,0 +1,74 @@
+{
+ "project": "humanize-4.16.0",
+ "file": "src/humanize/time.py",
+ "agent": "codex",
+ "prompt": "Refactor src/humanize/time.py to make it cleaner and easier to maintain: simplify logic, remove duplication, and use modern Python idioms. Keep the public API the same and do not change behavior. Only edit src/humanize/time.py. You can run the test suite with:\n  /home/user/runsnap/.venv/bin/python -m pytest -q -p no:cacheprovider tests",
+ "agent_run": {
+  "exit": 0,
+  "seconds": 68
+ },
+ "files_touched": [
+  ".ruff_cache",
+  "src/humanize/time.py"
+ ],
+ "patch_lines": 129,
+ "tests_before": {
+  "passed": 769,
+  "failed": 0,
+  "errors": 15
+ },
+ "tests_after": {
+  "passed": 769,
+  "failed": 0,
+  "errors": 15
+ },
+ "tests_pass": true,
+ "changed": 0,
+ "gone": 0,
+ "new": 680,
+ "functions_flagged": [
+  "humanize.time.Unit.__lt__"
+ ],
+ "examples": [
+  {
+   "kind": "new",
+   "test": "tests/test_i18n.py::test_i18n",
+   "func": "humanize.time.Unit.__lt__",
+   "args": "self=<Unit>, other=<Unit.SECONDS: 2>",
+   "before": null,
+   "after": "returns True"
+  },
+  {
+   "kind": "new",
+   "test": "tests/test_i18n.py::test_i18n",
+   "func": "humanize.time.Unit.__lt__",
+   "args": "self=<Unit>, other=<Unit.SECONDS: 2>",
+   "before": null,
+   "after": "returns True"
+  },
+  {
+   "kind": "new",
+   "test": "tests/test_i18n.py::test_i18n",
+   "func": "humanize.time.Unit.__lt__",
+   "args": "self=<Unit>, other=<Unit.SECONDS: 2>",
+   "before": null,
+   "after": "returns False"
+  },
+  {
+   "kind": "new",
+   "test": "tests/test_i18n.py::test_i18n",
+   "func": "humanize.time.Unit.__lt__",
+   "args": "self=<Unit>, other=<Unit.SECONDS: 2>",
+   "before": null,
+   "after": "returns False"
+  },
+  {
+   "kind": "new",
+   "test": "tests/test_i18n.py::test_i18n",
+   "func": "humanize.time.Unit.__lt__",
+   "args": "self=<Unit>, other=<Unit.SECONDS: 2>",
+   "before": null,
+   "after": "returns False"
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "project": "humanize-4.16.0",
+ "file": "src/humanize/number.py",
+ "agent": "codex",
+ "prompt": "Refactor src/humanize/number.py to make it cleaner and easier to maintain: simplify logic, remove duplication, and use modern Python idioms. Keep the public API the same and do not change behavior. Only edit src/humanize/number.py. You can run the test suite with:\n  /home/user/runsnap/.venv/bin/python -m pytest -q -p no:cacheprovider tests",
+ "agent_run": {
+  "exit": 0,
+  "seconds": 115
+ },
+ "files_touched": [
+  "src/humanize/number.py"
+ ],
+ "patch_lines": 101,
+ "tests_before": {
+  "passed": 769,
+  "failed": 0,
+  "errors": 15
+ },
+ "tests_after": {
+  "passed": 769,
+  "failed": 0,
+  "errors": 15
+ },
+ "tests_pass": true,
+ "changed": 0,
+ "gone": 0,
+ "new": 0,
+ "functions_flagged": [],
+ "examples": []
+}

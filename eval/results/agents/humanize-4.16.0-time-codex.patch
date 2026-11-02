@@ -1,0 +1,237 @@
+--- a/src/humanize/time.py
++++ b/src/humanize/time.py
+@@ -138,11 +138,10 @@
+     """
+     import datetime as dt
+ 
+-    tmp = Unit[minimum_unit.upper()]
+-    if tmp not in (Unit.SECONDS, Unit.MILLISECONDS, Unit.MICROSECONDS):
++    min_unit = Unit[minimum_unit.upper()]
++    if min_unit not in (Unit.SECONDS, Unit.MILLISECONDS, Unit.MICROSECONDS):
+         msg = f"Minimum unit '{minimum_unit}' not supported"
+         raise ValueError(msg)
+-    min_unit = tmp
+ 
+     if isinstance(value, dt.timedelta):
+         delta = value
+@@ -154,14 +153,11 @@
+         except (ValueError, TypeError):
+             return str(value)
+ 
+-    use_months = months
+-
+     delta = abs(delta)
+-    years = delta.days // 365
+-    days = delta.days % 365
++    years, days = divmod(delta.days, 365)
+     num_months = round(days / 30.5)
+ 
+-    if years == 0 and days < 1:
++    if years == 0 and days == 0:
+         if delta.seconds == 0:
+             if min_unit == Unit.MICROSECONDS and delta.microseconds < 1000:
+                 return (
+@@ -185,7 +181,7 @@
+         if delta.seconds < 60:
+             return _ngettext("%d second", "%d seconds", delta.seconds) % delta.seconds
+ 
+-        if 60 <= delta.seconds < 3600:
++        if delta.seconds < 3600:
+             minutes = round(delta.seconds / 60)
+             if minutes == 1:
+                 return _("a minute")
+@@ -195,24 +191,20 @@
+ 
+             return _ngettext("%d minute", "%d minutes", minutes) % minutes
+ 
+-        if 3600 <= delta.seconds:
+-            hours = round(delta.seconds / 3600)
+-            if hours == 1:
+-                return _("an hour")
+-
+-            if hours == 24:
+-                return _("a day")
+-
+-            return _ngettext("%d hour", "%d hours", hours) % hours
++        hours = round(delta.seconds / 3600)
++        if hours == 1:
++            return _("an hour")
++
++        if hours == 24:
++            return _("a day")
++
++        return _ngettext("%d hour", "%d hours", hours) % hours
+ 
+     elif years == 0:
+         if days == 1:
+             return _("a day")
+ 
+-        if not use_months:
+-            return _ngettext("%d day", "%d days", days) % days
+-
+-        if num_months == 0:
++        if not months or num_months == 0:
+             return _ngettext("%d day", "%d days", days) % days
+ 
+         if num_months == 1:
+@@ -224,26 +216,22 @@
+         return _ngettext("%d month", "%d months", num_months) % num_months
+ 
+     elif years == 1:
+-        if num_months == 0 and days == 0:
++        if days == 0:
+             return _("a year")
+ 
+-        if num_months == 0:
++        if not months or num_months == 0:
+             return _ngettext("1 year, %d day", "1 year, %d days", days) % days
+ 
+-        if use_months:
+-            if num_months == 1:
+-                return _("1 year, 1 month")
+-
+-            if num_months == 12:
+-                years += 1
+-                return _ngettext("%d year", "%d years", years) % years
+-
+-            return (
+-                _ngettext("1 year, %d month", "1 year, %d months", num_months)
+-                % num_months
+-            )
+-
+-        return _ngettext("1 year, %d day", "1 year, %d days", days) % days
++        if num_months == 1:
++            return _("1 year, 1 month")
++
++        if num_months == 12:
++            years += 1
++            return _ngettext("%d year", "%d years", years) % years
++
++        return (
++            _ngettext("1 year, %d month", "1 year, %d months", num_months) % num_months
++        )
+ 
+     return _ngettext("%d year", "%d years", years).replace("%d", "%s") % intcomma(years)
+ 
+@@ -313,6 +301,17 @@
+     return value
+ 
+ 
++def _date_and_today(value: Any) -> tuple[dt.date, dt.date]:
++    """Return the input date and today's date in the input's timezone."""
++    import datetime as dt
++
++    if isinstance(value, dt.datetime) and value.tzinfo is not None:
++        today = dt.datetime.now(value.tzinfo).date()
++    else:
++        today = dt.date.today()
++    return dt.date(value.year, value.month, value.day), today
++
++
+ def naturalday(value: dt.date | dt.datetime, format: str = "%b %d") -> str:
+     """Return a natural day.
+ 
+@@ -321,21 +320,10 @@
+     formatted according to `format`.
+ 
+     """
+-    import datetime as dt
+-
+     try:
+-        # When value is a tz-aware datetime, compute "today" in that timezone
+-        # so the comparison uses the correct local date.
+-        if isinstance(value, dt.datetime) and value.tzinfo is not None:
+-            today = dt.datetime.now(value.tzinfo).date()
+-        else:
+-            today = dt.date.today()
+-        value = dt.date(value.year, value.month, value.day)
+-    except AttributeError:
+-        # Passed value wasn't date-ish
+-        return str(value)
+-    except (OverflowError, ValueError):
+-        # Date arguments out of range
++        value, today = _date_and_today(value)
++    except (AttributeError, OverflowError, ValueError):
++        # The value is not date-like, or its date arguments are out of range.
+         return str(value)
+     delta = value - today
+ 
+@@ -353,20 +341,10 @@
+ 
+ def naturaldate(value: dt.date | dt.datetime) -> str:
+     """Like `naturalday`, but append a year for dates more than ~five months away."""
+-    import datetime as dt
+-
+     original_value = value
+     try:
+-        if isinstance(value, dt.datetime) and value.tzinfo is not None:
+-            today = dt.datetime.now(value.tzinfo).date()
+-        else:
+-            today = dt.date.today()
+-        value = dt.date(value.year, value.month, value.day)
+-    except AttributeError:
+-        # Passed value wasn't date-ish
+-        return str(value)
+-    except (OverflowError, ValueError):
+-        # Date arguments out of range
++        value, today = _date_and_today(value)
++    except (AttributeError, OverflowError, ValueError):
+         return str(value)
+     delta = _abs_timedelta(value - today)
+     if delta.days >= 5 * 365 / 12:
+@@ -455,13 +433,7 @@
+     >>> [x.name for x in sorted(_suppress_lower_units(Unit.SECONDS, [Unit.DAYS]))]
+     ['MICROSECONDS', 'MILLISECONDS', 'DAYS']
+     """
+-    suppress = set(suppress)
+-    for unit in Unit:
+-        if unit == min_unit:
+-            break
+-        suppress.add(unit)
+-
+-    return suppress
++    return set(suppress) | {unit for unit in Unit if unit < min_unit}
+ 
+ 
+ def precisedelta(
+@@ -546,7 +518,6 @@
+     # user gave us, if that one is suppressed).
+     min_unit = Unit[minimum_unit.upper()]
+     min_unit = _suitable_minimum_unit(min_unit, suppress_set)
+-    del minimum_unit
+ 
+     # Expand the suppressed units list/set to include all the units
+     # that are below the minimum unit
+@@ -643,8 +614,7 @@
+     import math
+ 
+     texts: list[str] = []
+-    for unit, fmt in zip(reversed(Unit), fmts):
+-        singular_txt, plural_txt, fmt_value = fmt
++    for unit, (singular_txt, plural_txt, fmt_value) in zip(reversed(Unit), fmts):
+         if fmt_value > 0 or (not texts and unit == min_unit):
+             _fmt_value = 2 if 1 < fmt_value < 2 else int(fmt_value)
+             fmt_txt = _ngettext(singular_txt, plural_txt, _fmt_value)
+@@ -665,10 +635,7 @@
+     if len(texts) == 1:
+         return texts[0]
+ 
+-    head = ", ".join(texts[:-1])
+-    tail = texts[-1]
+-
+-    return _("%s and %s") % (head, tail)
++    return _("%s and %s") % (", ".join(texts[:-1]), texts[-1])
+ 
+ 
+ def _rounding_by_fmt(format: str, value: float) -> float | int:
+@@ -685,8 +652,6 @@
+     result = format % value
+ 
+     try:
+-        value = int(result)
++        return int(result)
+     except ValueError:
+-        value = float(result)
+-
+-    return value
++        return float(result)
