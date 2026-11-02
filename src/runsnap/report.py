@@ -121,28 +121,52 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 syst
 .tile.skipped { background: var(--skip); border: 2px dashed var(--skip-line); }
 .tile.sel { outline: 3px solid var(--focus); outline-offset: 2px; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--chg) 25%, transparent); } }
-@media (prefers-reduced-motion: reduce) { .tile.changed { animation: none; } .tile { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tile.changed { animation: none; } .tile, .g > summary::after { transition: none; } }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; position: sticky; top: 16px; min-width: 0; }
 .card .fn { font-size: 20px; font-weight: 700; word-break: break-all; }
-.card .where { color: var(--muted); font-size: 13px; margin-bottom: 16px; word-break: break-all; }
+.card .where { color: var(--muted); font-size: 13px; word-break: break-all; }
+.card .seen { color: var(--muted); font-size: 12px; margin: 2px 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; margin: 10px 0; }
 .row .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-.args { background: var(--bg); border-radius: 8px; padding: 6px 10px; font-size: 13px; word-break: break-all; }
+.row.top { align-items: start; }
+.row.top .k { padding-top: 6px; }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 12px; background: var(--bg); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; word-break: break-all; }
 .val { font-size: 26px; font-weight: 600; word-break: break-all; }
 .val.small { font-size: 15px; font-weight: 500; color: var(--muted); }
 .val.old { color: var(--old); }
 .val.new { color: var(--chg); }
-.val ins, .vals ins { background: var(--chg-soft); color: var(--chg); text-decoration: none; border-radius: 5px; padding: 0 2px; }
-.val del, .vals del { color: var(--old); text-decoration-thickness: 3px; }
+.val ins, .pair ins { background: var(--chg-soft); color: var(--chg); text-decoration: none; border-radius: 5px; padding: 0 2px; }
+.val del, .pair del { color: var(--old); text-decoration-thickness: 2px; }
 .arrow { color: var(--muted); font-size: 22px; padding-left: 76px; line-height: 1; }
-.foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.more { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 4px 12px; cursor: pointer; font: inherit; }
-.all { margin-top: 12px; display: grid; gap: 8px; }
+.foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; }
+.stat { background: var(--bg); border-radius: 999px; padding: 2px 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stat b { color: var(--text); font-weight: 600; }
+.more { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+.all { margin-top: 14px; }
 .all[hidden] { display: none; }
-.all .g { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; min-width: 0; }
-.all .g .n { font-weight: 700; color: var(--chg); margin-right: 6px; }
-.all .g .vals { margin-top: 4px; word-break: break-all; }
-.all .g .a { color: var(--muted); word-break: break-all; }
+.all h4 { margin: 14px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+.g { border-top: 1px solid var(--line); }
+.g > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 44px minmax(0, 1fr) 16px; gap: 2px 10px; padding: 9px 0; border-radius: 6px; }
+.g > summary::-webkit-details-marker { display: none; }
+.g > summary:hover .pair { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.g > summary:focus-visible, .rest:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.g > summary::after { content: "›"; grid-column: 3; grid-row: 1; color: var(--muted); font-size: 18px; line-height: 1; transition: transform .15s; justify-self: center; }
+.g[open] > summary::after { transform: rotate(90deg); }
+.g .n { grid-row: span 2; align-self: start; text-align: right; font-weight: 700; color: var(--chg); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.g .when { grid-column: 2; }
+.g > .kv { margin: 0 26px 10px 54px; }
+.g.extra[hidden] { display: none; }
+.g .pair { font-size: 15px; font-weight: 600; word-break: break-all; }
+.g .pair .to { color: var(--muted); font-weight: 400; margin: 0 6px; }
+.g .pair i { color: var(--muted); font-weight: 400; font-style: normal; font-size: 13px; }
+.g .when { display: flex; flex-wrap: wrap; gap: 4px; }
+.g .when span { font-size: 12px; color: var(--muted); background: var(--bg); border-radius: 6px; padding: 0 7px; word-break: break-all; }
+.rest { display: block; width: 100%; text-align: left; margin: 0; padding: 8px 0 4px 54px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.rest:hover { text-decoration: underline; }
+.g .when span b { color: var(--text); font-weight: 500; }
 .empty { color: var(--muted); }
 @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .card { position: static; } .hero .big { font-size: 44px; } }
 </style>
@@ -226,10 +250,24 @@ function drawMap() {
   document.querySelectorAll(".tile").forEach(t => t.addEventListener("click", () => select(t.dataset.f)));
 }
 
+// "<Unit.SECONDS: 2>" -> "Unit.SECONDS": enum and object reprs are noise in a small space.
+function tidy(v) { return String(v).replace(/<([A-Za-z_][\w.]*): [^<>]*>/g, "$1"); }
+// "a=1, b=[2, 3]" -> [["a", "1"], ["b", "[2, 3]"]]
+function parseArgs(s) {
+  if (!s) return [];
+  return s.split(/, (?=[A-Za-z_]\w*=)/).map(p => { const i = p.indexOf("="); return [p.slice(0, i), tidy(p.slice(i + 1))]; });
+}
 function valuePair(g) {
-  if (g.kind === "changed") return wordDiff(strip(g.before), strip(g.after));
-  if (g.kind === "gone") return [esc(strip(g.before)), null];
-  return [null, esc(strip(g.after))];
+  if (g.kind === "changed") return wordDiff(tidy(strip(g.before)), tidy(strip(g.after)));
+  if (g.kind === "gone") return [esc(tidy(strip(g.before))), null];
+  return [null, esc(tidy(strip(g.after)))];
+}
+// Arguments whose value differs between the groups; the rest are the same everywhere and hidden.
+function varyingKeys(groups) {
+  const seen = {};
+  groups.forEach(g => parseArgs(g.args).forEach(([k, v]) => (seen[k] ??= new Set()).add(v)));
+  const keys = Object.keys(seen).filter(k => seen[k].size > 1).sort((a, b) => seen[b].size - seen[a].size);
+  return (keys.length ? keys : Object.keys(seen)).slice(0, 2);
 }
 
 function drawCard() {
@@ -247,26 +285,50 @@ function drawCard() {
   }
   const g = c.groups[0];
   const [b, a] = valuePair(g);
-  const parts = [];
-  if (c.changed) parts.push(`${c.changed} results changed`);
-  if (c.gone) parts.push(`${c.gone} calls gone`);
-  if (c.new) parts.push(`${c.new} new calls`);
-  parts.push(`${c.tests} test${c.tests === 1 ? "" : "s"}`);
+  const testName = g.test.split("::").pop();
+  const args = parseArgs(g.args);
+  const stats = [[c.changed, "changed"], [c.gone, "gone"], [c.new, "new"], [c.tests, c.tests === 1 ? "test" : "tests"]]
+    .filter(([n]) => n).map(([n, l]) => `<span class="stat"><b>${n}</b> ${l}</span>`).join("");
   const n = total(c);
+  const keys = varyingKeys(c.groups);
+  const titles = { changed: "Result changed", gone: "No longer called", new: "New calls" };
+  const sections = ["changed", "gone", "new"].map(kind => {
+    const gs = c.groups.filter(x => x.kind === kind);
+    if (!gs.length) return "";
+    const extra = gs.slice(8), extraCalls = extra.reduce((sum, x) => sum + x.count, 0);
+    return `<h4>${titles[kind]}</h4>` + gs.map((gr, i) => {
+      const [x, y] = valuePair(gr);
+      const all = parseArgs(gr.args);
+      const when = all.filter(([k]) => keys.includes(k))
+        .map(([k, v]) => `<span class="mono">${esc(k)} <b>${esc(v)}</b></span>`).join("");
+      return `<details class="g${i >= 8 ? " extra" : ""}" data-kind="${kind}" ${i >= 8 ? "hidden" : ""}>
+        <summary><span class="n">${gr.count}×</span>
+          <div class="pair mono">${x ?? "<i>not called</i>"}<span class="to">→</span>${y ?? "<i>not called</i>"}</div>
+          <div class="when">${when}</div></summary>
+        <dl class="kv mono">${all.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("") || "<dd>(no arguments)</dd>"}</dl>
+        </details>`;
+    }).join("") + (extra.length ? `<button class="rest" data-kind="${kind}"
+        data-more="Show ${extra.length} more patterns (${extraCalls} calls)">Show ${extra.length} more patterns (${extraCalls} calls)</button>` : "");
+  }).join("");
   card.innerHTML = head + `
-    <div class="row"><div class="k">Input</div><div class="args mono">${esc(g.args) || "(no arguments)"}</div></div>
+    <div class="seen" title="${esc(g.test)}">seen in ${esc(testName)}</div>
+    <div class="row top"><div class="k">Input</div>${args.length
+      ? `<dl class="kv mono">${args.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`
+      : `<div class="kv mono">(no arguments)</div>`}</div>
     <div class="row"><div class="k">Before</div><div class="val old mono ${b === null ? "small" : ""}">${b ?? "not called with this input"}</div></div>
     <div class="arrow">↓</div>
     <div class="row"><div class="k">Now</div><div class="val new mono ${a === null ? "small" : ""}">${a ?? "not called with this input"}</div></div>
-    <div class="foot"><span>${parts.join(" · ")} · e.g. in ${esc(g.test.split("::").pop())}</span>
-      ${n > 1 ? `<button class="more" id="more">${showAll ? "Hide" : `Show all ${n}`}</button>` : ""}</div>
-    <div class="all" id="all" ${showAll ? "" : "hidden"}>${c.groups.map(gr => {
-      const [x, y] = valuePair(gr);
-      return `<div class="g"><span class="n">${gr.count}×</span><span class="a mono">${esc(gr.args)}</span>
-        <div class="vals mono">${x ?? "<i>not called</i>"} → ${y ?? "<i>not called</i>"}</div></div>`;
-    }).join("")}</div>`;
+    <div class="foot"><div class="stats">${stats}</div>
+      ${n > 1 ? `<button class="more" id="more">${showAll ? "Hide list" : `Show all ${n}`}</button>` : ""}</div>
+    <div class="all" ${showAll ? "" : "hidden"}>${sections}</div>`;
   const more = document.getElementById("more");
   if (more) more.addEventListener("click", () => { showAll = !showAll; drawCard(); });
+  card.querySelectorAll(".rest").forEach(btn => btn.addEventListener("click", () => {
+    const rows = card.querySelectorAll(`.g.extra[data-kind="${btn.dataset.kind}"]`);
+    const opening = rows[0].hidden;
+    rows.forEach(r => { r.hidden = !opening; });
+    btn.textContent = opening ? "Show fewer" : btn.dataset.more;
+  }));
 }
 
 function select(f) { selected = f; showAll = false; drawHeader(); drawMap(); drawCard(); }
