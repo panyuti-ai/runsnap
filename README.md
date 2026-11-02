@@ -39,7 +39,14 @@ pytest --runsnap=after --runsnap-module=mypkg
 
 # 3. see what changed
 runsnap diff before after --rerun before2        # --json for machines, --fail to exit 1 on changes
+
+# 4. or see it as a page: every recorded function is a box, the ones that changed are red
+runsnap diff before after --rerun before2 --html report.html
 ```
+
+![runsnap HTML report: a map of humanize's functions with one changed function in red, and a card showing it returned (0.0, 0) before and (0.0, 1) now](docs/report.png)
+
+The report above comes from the mutation experiment in [eval/](eval/): one `0` changed to `1` in humanize, which its own tests did not catch.
 
 Other commands: `runsnap calls SNAPSHOT FUNCTION [--test NAME]`, `runsnap slowest SNAPSHOT`, `runsnap list`.
 You can also set `runsnap_modules = mypkg` in your pytest ini instead of passing `--runsnap-module`.

@@ -1,6 +1,6 @@
 """runsnap command line.
 
-  runsnap diff BEFORE AFTER [--rerun BEFORE2] [--json]
+  runsnap diff BEFORE AFTER [--rerun BEFORE2] [--json] [--html report.html]
   runsnap calls SNAPSHOT FUNCTION [--test NAME]
   runsnap slowest SNAPSHOT
   runsnap list
@@ -26,6 +26,7 @@ def main(argv=None) -> int:
     d.add_argument("--rerun", help="a second recording of BEFORE; anything that differs there is ignored as unstable")
     d.add_argument("--json", action="store_true")
     d.add_argument("--fail", action="store_true", help="exit 1 when any behavior changed")
+    d.add_argument("--html", metavar="PATH", help="also write a one-file HTML report you can open in a browser")
 
     c = sub.add_parser("calls", help="show recorded calls of a function")
     c.add_argument("snapshot")
@@ -45,6 +46,10 @@ def main(argv=None) -> int:
         if args.cmd == "diff":
             result = diff_mod.diff(args.before, args.after, args.rerun)
             print(json.dumps(result, ensure_ascii=False, indent=1) if args.json else diff_mod.format_text(result))
+            if args.html:
+                from . import report
+                report.write(args.html, args.before, args.after, args.rerun)
+                print(f"runsnap: report written to {args.html}", file=sys.stderr)
             return 1 if args.fail and result["changed"] else 0
         if args.cmd == "calls":
             for row in query.calls(args.snapshot, args.function, args.test, args.limit):

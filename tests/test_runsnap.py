@@ -193,3 +193,47 @@ def test_identical_functions_in_two_modules_keep_their_names(pytester, monkeypat
     pytester.runpytest_subprocess("--runsnap=s", "--runsnap-module=pkg", "-p", "no:cacheprovider").assert_outcomes(passed=1)
     funcs = sorted(r["func"] for r in query.calls("s", "<lambda>"))
     assert funcs == ["pkg.a.helper.<locals>.<lambda>", "pkg.b.helper.<locals>.<lambda>"]
+
+
+def _report_data(page):
+    """The JSON the HTML report embeds."""
+    start = page.index("const DATA = ") + len("const DATA = ")
+    return json.loads(page[start:page.index(";\n", start)].replace("<\\/", "</"))
+
+
+def test_html_report_marks_changed_and_skipped_functions(project, capsys):
+    from runsnap import report
+
+    record(project, "before")
+    record(project, "rerun")
+    project.makepyfile(shop=SHOP_V1.replace("round(amount * rate, 2)", "round(amount * rate + 0.5, 2)"))
+    record(project, "after")
+
+    out = project.path / "report.html"
+    assert cli.main(["diff", "before", "after", "--rerun", "rerun", "--html", str(out)]) == 0
+    assert "report written to" in capsys.readouterr().err
+    data = _report_data(out.read_text(encoding="utf-8"))
+
+    states = {f: state for f, _, state in data["funcs"]}
+    assert states["shop.calc_tax"] == "changed"
+    assert states["shop.checkout"] == "skipped"  # time and random differ on every run
+    assert states["shop.numbers"] == "same"
+    group = data["changes"]["shop.calc_tax"]["groups"][0]
+    assert (group["before"], group["after"]) == ("returns 7.5", "returns 8.0")
+
+    # A recorded value containing "</script>" must not end the report's script block.
+    real_diff = report.diff_mod.diff
+
+    def with_script_tag(*args):
+        result = real_diff(*args)
+        result["changed"][0]["after"] = "returns '</script><b>x'"
+        return result
+
+    report.diff_mod.diff = with_script_tag
+    try:
+        page = report.build("before", "after")
+    finally:
+        report.diff_mod.diff = real_diff
+    assert page.count("</script>") == 1
+    assert any(g["after"] == "returns '</script><b>x'"
+               for c in _report_data(page)["changes"].values() for g in c["groups"])
