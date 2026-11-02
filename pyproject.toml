@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "runsnap"
+version = "0.1.0"
+description = "Record what your Python code actually does during tests, diff it before and after an AI agent's change, and let agents query real runtime values over MCP."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Yu-Ting Pan" }]
+dependencies = ["pytest>=8"]
+
+[project.optional-dependencies]
+mcp = ["mcp>=2"]
+
+[project.scripts]
+runsnap = "runsnap.cli:main"
+
+[project.entry-points.pytest11]
+runsnap = "runsnap.plugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
