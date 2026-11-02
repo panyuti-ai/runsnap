@@ -55,6 +55,28 @@ The report above comes from the mutation experiment in [eval/](eval/): one `0` c
 Other commands: `runsnap calls SNAPSHOT FUNCTION [--test NAME]`, `runsnap slowest SNAPSHOT`, `runsnap list`.
 You can also set `runsnap_modules = mypkg` in your pytest ini instead of passing `--runsnap-module`.
 
+## Claude Code plugin
+
+The plugin does the recording and the diff for you, every turn, and tells Claude what changed:
+
+- before Claude's first edit of a `.py` file in a turn, it records your tests (twice, to learn what changes on every run);
+- when Claude is about to finish, it records them again and compares;
+- if any call now returns a different result for the same input, Claude is asked once to explain the change to you or fix it. Otherwise you see one line: `runsnap: same results for all compared calls`.
+
+Install runsnap in the project's environment (see above), then in Claude Code:
+
+```
+/plugin install runsnap --marketplace panyuti-ai/runsnap
+```
+
+and opt the project in with `.claude/runsnap.json`:
+
+```json
+{"modules": ["mypkg"], "tests": ["tests"], "python": ".venv/bin/python"}
+```
+
+`python` defaults to `.venv/bin/python` when it exists. Each turn that edits Python runs your tests three times, so this suits suites that take seconds, not minutes. Recordings and the HTML report go to `.runsnap/claude/`; add `.runsnap/` to `.gitignore`.
+
 ## For agents (MCP)
 
 ```

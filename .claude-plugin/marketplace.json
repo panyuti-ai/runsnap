@@ -1,0 +1,12 @@
+{
+  "name": "runsnap",
+  "description": "Behavior diff for coding agents: what your code returns before and after Claude's edits",
+  "owner": { "name": "Yu-Ting Pan" },
+  "plugins": [
+    {
+      "name": "runsnap",
+      "source": "./plugins/runsnap",
+      "description": "Records your tests before Claude edits Python, and when Claude finishes, shows it every call that now returns a different result."
+    }
+  ]
+}
