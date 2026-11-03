@@ -1,9 +1,8 @@
 # runsnap
 
-Record what your Python code **actually does** while your tests run: every call's real arguments, return value or exception. Then:
+**runsnap checks whether your code's answers changed. It does not check whether they are right.**
 
-- **Diff it** before and after an AI agent (or a person) changes the code, and get a list of behavior that changed, even when every test still passes.
-- **Let the agent look it up** over MCP instead of guessing what values a function receives.
+While your tests run, runsnap writes down every answer your Python functions give: the real inputs and what came back. After a change, it runs the tests again and lists every answer that is now different. It does not read the code and does not need to know the correct answer; the answers from before the change are the reference.
 
 ```
 $ runsnap diff before after --rerun before2
@@ -15,9 +14,13 @@ Behavior changed: 1
       after:  returns 159.0
 ```
 
-## Why
+This matters most for changes that should not change any answer: cleanups, renames, splitting functions, speed-ups. Then any difference is a possible mistake. For bug fixes and new features, the list shows you whether only the answers you meant to change did.
 
-Coding agents change code they did not write, and tests often do not pin down everything the code does. In a 2026 study of multi-step feature work, agents went back and noticed an earlier mistake in only about 5% of the later steps ([FeatureArc, arXiv:2610.37434](https://arxiv.org/abs/2610.37434)). "Which behavior did this change touch?" should not depend on the agent noticing.
+## Why I built this
+
+More and more code is changed by AI agents, in files they did not write. When Claude Code or Codex finishes a cleanup it says "all tests pass, nothing changed", but tests only check what someone thought to check, and reading every line the agent rewrote is slow. In a 2026 study of multi-step feature work, agents went back and noticed an earlier mistake in only about 5% of the later steps ([FeatureArc, arXiv:2610.37434](https://arxiv.org/abs/2610.37434)).
+
+I wanted a list I could trust instead of the agent's word: every answer that changed, with the input and the before and after values. And I wanted the agent to see that list itself, so it can explain or undo the change before saying it is done. That is the [Claude Code plugin](#claude-code-plugin) below. runsnap can also answer an agent's questions over [MCP](#for-agents-mcp), such as "what values does this function really receive?", instead of the agent guessing.
 
 ## What it found
 
