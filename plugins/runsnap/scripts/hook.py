@@ -3,6 +3,8 @@
 UserPromptSubmit  a new turn starts: forget the previous turn's recordings.
 PreToolUse        before Claude's first edit of a .py file in this turn, record the
                   tests twice (the second run tells apart values that change on every run).
+                  If no .py file changed since the last turn's final recording, that
+                  recording is reused as the first of the two.
 Stop              record the tests again and compare. If any call now returns a different
                   result for the same input, ask Claude once to explain or fix it.
 
@@ -13,6 +15,7 @@ Standard library only, so it runs with any python3.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -47,7 +50,28 @@ def load_config(cwd: Path) -> dict | None:
 
 
 def state_dir(cwd: Path, session: str) -> Path:
-    return cwd / ".runsnap" / "claude" / (session or "default")
+    """This turn's recordings; cleared when a new turn starts."""
+    return cwd / ".runsnap" / "claude" / (session or "default") / "turn"
+
+
+def last_dir(cwd: Path, session: str) -> Path:
+    """The last turn's final recording, kept for the next turn."""
+    return cwd / ".runsnap" / "claude" / (session or "default") / "last"
+
+
+def fingerprint(cwd: Path) -> str:
+    """Hash of every .py file in the project, so a reused recording is only used for
+    exactly the code it was made from. Skips hidden folders (.venv, .git, .runsnap)."""
+    digest = hashlib.sha256()
+    for root, dirs, files in os.walk(cwd):
+        dirs[:] = sorted(d for d in dirs if not d.startswith(".") and d not in ("__pycache__", "node_modules")
+                         and not d.endswith(".egg-info"))
+        for name in sorted(files):
+            if name.endswith(".py"):
+                path = Path(root) / name
+                digest.update(str(path.relative_to(cwd)).encode() + b"\0")
+                digest.update(path.read_bytes() + b"\0")
+    return digest.hexdigest()
 
 
 def run_tests(cfg: dict, cwd: Path, snapshot: Path) -> str:
@@ -116,8 +140,15 @@ def on_edit(cwd: Path, session: str, cfg: dict, event: dict) -> dict | None:
     if (state / "base2.sqlite").exists() or (state / "failed").exists():
         return None
     state.mkdir(parents=True, exist_ok=True)
+    last = last_dir(cwd, session)
     try:
-        run_tests(cfg, cwd, state / "base.sqlite")
+        reusable = (last / "after.sqlite").exists() and (last / "fingerprint").exists()
+        if reusable and (last / "fingerprint").read_text() == fingerprint(cwd):
+            shutil.copyfile(last / "after.sqlite", state / "base.sqlite")
+            (state / "baseline").write_text("reused", encoding="utf-8")
+        else:
+            run_tests(cfg, cwd, state / "base.sqlite")
+            (state / "baseline").write_text("recorded", encoding="utf-8")
         run_tests(cfg, cwd, state / "base2.sqlite")
     except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
         (state / "failed").write_text(str(exc), encoding="utf-8")
@@ -133,7 +164,14 @@ def on_stop(cwd: Path, session: str, cfg: dict, event: dict) -> dict | None:
     if event.get("stop_hook_active"):
         return None
     try:
+        code = fingerprint(cwd)
         tests_line = run_tests(cfg, cwd, state / "after.sqlite")
+        # Keep this recording for the next turn. If Claude or the user edits a .py file
+        # after this point, the fingerprint no longer matches and it is not reused.
+        last = last_dir(cwd, session)
+        last.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(state / "after.sqlite", last / "after.sqlite")
+        (last / "fingerprint").write_text(code, encoding="utf-8")
         result = compare(cfg, cwd, state)
     except (RuntimeError, OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
         return {"systemMessage": f"runsnap: could not compare behavior ({exc})"}
