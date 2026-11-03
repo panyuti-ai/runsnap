@@ -89,7 +89,7 @@ for the same input (187 passed, 1 skipped in 1.34s):
 
 Claude answered that its shorter `interpose` returned a different kind of empty iterator, put the original code back, and re-ran the tests. Full transcript excerpt and patch: [eval/results/plugin-demo/](eval/results/plugin-demo/).
 
-`python` defaults to `.venv/bin/python` when it exists. Each turn that edits Python runs your tests three times, so this suits suites that take seconds, not minutes. Recordings and the HTML report go to `.runsnap/claude/`; add `.runsnap/` to `.gitignore`.
+`python` defaults to `.venv/bin/python` when it exists. Each turn that edits Python runs your tests three times (two when no `.py` file changed since the previous turn, which reuses that turn's last recording), and recording makes a run about 1.2 to 1.8 times slower, so this suits suites that take seconds, not minutes. Recordings and the HTML report go to `.runsnap/claude/`; add `.runsnap/` to `.gitignore`.
 
 ## For agents (MCP)
 

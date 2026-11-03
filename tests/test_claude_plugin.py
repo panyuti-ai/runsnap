@@ -77,3 +77,43 @@ def test_new_turn_starts_a_new_baseline(project):
     project.makepyfile(shop=SHOP_V1.replace("rate=0.05", "rate=0.06") + "\n# comment\n")
     out = hook(project, "Stop", stop_hook_active=False)
     assert "decision" not in out
+
+
+def turn_dir(project):
+    return project.path / ".runsnap" / "claude" / "s1" / "turn"
+
+
+def test_next_turn_reuses_the_last_recording_when_no_code_changed(project):
+    hook(project, "UserPromptSubmit")
+    hook(project, "PreToolUse", **edit(project.path / "shop.py"))
+    assert (turn_dir(project) / "baseline").read_text() == "recorded"
+    project.makepyfile(shop=SHOP_V1.replace("rate=0.05", "rate=0.06"))
+    hook(project, "Stop", stop_hook_active=False)
+
+    hook(project, "UserPromptSubmit")
+    hook(project, "PreToolUse", **edit(project.path / "shop.py"))
+    assert (turn_dir(project) / "baseline").read_text() == "reused"
+    # A real change in this turn is still found against the reused recording.
+    project.makepyfile(shop=SHOP_V1.replace("rate=0.05", "rate=0.06").replace("round(amount * rate, 2)", "round(amount * rate + 0.5, 2)"))
+    out = hook(project, "Stop", stop_hook_active=False)
+    assert out["decision"] == "block" and "shop.calc_tax(amount=150, rate=0.06)" in out["reason"]
+
+
+def test_code_edited_after_the_check_is_recorded_again(project):
+    hook(project, "UserPromptSubmit")
+    hook(project, "PreToolUse", **edit(project.path / "shop.py"))
+    project.makepyfile(shop=SHOP_V1.replace("rate=0.05", "rate=0.06"))
+    hook(project, "Stop", stop_hook_active=False)
+    # Claude (after the hook) or the user changes the tax rule before the next turn.
+    user_edit = SHOP_V1.replace("rate=0.05", "rate=0.06").replace("round(amount * rate, 2)", "round(amount * rate + 0.5, 2)")
+    project.makepyfile(shop=user_edit)
+
+    hook(project, "UserPromptSubmit")
+    hook(project, "PreToolUse", **edit(project.path / "shop.py"))
+    assert (turn_dir(project) / "baseline").read_text() == "recorded"
+    project.makepyfile(shop=user_edit.replace("+ 0.5", "+ 1.0"))
+    out = hook(project, "Stop", stop_hook_active=False)
+    # Reusing the stale recording would make calc_tax look unstable (it differs from the
+    # fresh second recording) and hide this change.
+    assert out["decision"] == "block"
+    assert "before: returns 9.5" in out["reason"] and "now:    returns 10.0" in out["reason"]
